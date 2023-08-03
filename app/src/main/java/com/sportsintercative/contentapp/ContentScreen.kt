@@ -11,7 +11,7 @@ import com.sportsintercative.contentapp.models.ImageItem
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 
-//AIzaSyC64jQh-m3fGRi-7OOw-NxoLT-wmrWg5Aw
+
 class ContentScreen : AppCompatActivity() {
 
     private lateinit var viewPager: ViewPager
