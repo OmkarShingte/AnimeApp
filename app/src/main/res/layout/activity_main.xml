@@ -115,20 +115,6 @@
                         app:layout_constraintStart_toStartOf="@+id/view_back"
                         app:layout_constraintTop_toTopOf="@+id/view_back" />
 
-                    <!--            <com.viewpagerindicator.CirclePageIndicator-->
-                    <!--                android:id="@+id/indicator"-->
-                    <!--                android:layout_width="fill_parent"-->
-                    <!--                android:layout_height="wrap_content"-->
-                    <!--                android:padding="10dip"-->
-                    <!--                app:centered="true"-->
-                    <!--                app:fillColor="@color/hint_text_color"-->
-                    <!--                app:layout_constraintBottom_toBottomOf="parent"-->
-                    <!--                app:layout_constraintEnd_toEndOf="parent"-->
-                    <!--                app:layout_constraintStart_toStartOf="parent"-->
-                    <!--                app:layout_constraintTop_toBottomOf="@+id/pager"-->
-                    <!--                app:pageColor="@android:color/transparent"-->
-                    <!--                app:snap="false" />-->
-
                     <View
                         android:id="@+id/view_back1"
                         android:layout_width="50dp"
@@ -161,9 +147,9 @@
             android:layout_marginStart="16dp"
             android:background="@android:color/transparent"
             android:padding="4dp"
-            app:layout_constraintBottom_toBottomOf="@+id/progressBar"
+            app:layout_constraintBottom_toBottomOf="@+id/seekBar"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/progressBar"
+            app:layout_constraintTop_toTopOf="@+id/seekBar"
             app:srcCompat="@drawable/ic_play" />
 
         <WebView
@@ -175,18 +161,13 @@
             app:layout_constraintStart_toStartOf="@+id/cardView2"
             app:layout_constraintTop_toBottomOf="@+id/cardView2" />
 
-        <ProgressBar
-            android:id="@+id/progressBar"
-            style="?android:attr/progressBarStyleHorizontal"
+        <SeekBar
+            android:id="@+id/seekBar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:layout_marginTop="24dp"
             android:layout_marginEnd="16dp"
-            android:layout_marginBottom="20dp"
-            android:max="100"
-            android:progress="0"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/btPlayPause"
             app:layout_constraintTop_toBottomOf="@+id/webView" />

@@ -6,6 +6,7 @@ import android.view.View
 import android.webkit.WebChromeClient
 import android.webkit.WebViewClient
 import android.widget.ProgressBar
+import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager.widget.ViewPager
@@ -29,6 +30,7 @@ class ContentScreen : AppCompatActivity() {
         ImageItem(R.drawable.a4),
         ImageItem(R.drawable.a5)
     )
+    private var isPlaying = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,15 +82,13 @@ class ContentScreen : AppCompatActivity() {
         adapter = ImagePagerAdapter(imageList)
         pager.adapter = adapter
 
-        var isPlaying = false
         btPlayPause.setOnClickListener {
             if (isPlaying) {
-                isPlaying = false
                 pauseSound()
             } else {
-                isPlaying = true
                 playSound()
             }
+            isPlaying = !isPlaying
         }
 
         view_back.setOnClickListener {
@@ -134,7 +134,7 @@ class ContentScreen : AppCompatActivity() {
     private fun playSound() {
         if (mMediaPlayer == null) {
             mMediaPlayer = MediaPlayer.create(this, R.raw.song)
-            mMediaPlayer!!.isLooping = true
+            mMediaPlayer!!.isLooping = false
             mMediaPlayer!!.start()
             val timer = Timer()
 
@@ -154,6 +154,41 @@ class ContentScreen : AppCompatActivity() {
                     }
                 }, 0, 1000)
             }
+            mMediaPlayer!!.setOnPreparedListener {
+                seekBar.max = mMediaPlayer!!.duration
+            }
+
+            mMediaPlayer!!.setOnCompletionListener {
+                btPlayPause.setImageResource(R.drawable.ic_play)
+                isPlaying = false
+                seekBar.progress = 0
+            }
+
+            seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(
+                    seekBar: SeekBar?,
+                    progress: Int,
+                    fromUser: Boolean
+                ) {
+                    if (fromUser) {
+                        mMediaPlayer!!.seekTo(progress)
+                    }
+                }
+
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+            })
+            Thread {
+                while (true) {
+                    Thread.sleep(100)
+                    runOnUiThread {
+                        if (mMediaPlayer!!.isPlaying) {
+                            seekBar.progress = mMediaPlayer!!.currentPosition
+                        }
+                    }
+                }
+            }.start()
         } else {
             mMediaPlayer!!.start()
         }
