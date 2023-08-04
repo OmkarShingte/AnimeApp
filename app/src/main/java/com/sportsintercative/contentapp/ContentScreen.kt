@@ -17,6 +17,9 @@ import com.sportsintercative.contentapp.models.ContentData
 import com.sportsintercative.contentapp.models.ImageItem
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
+import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 
 class ContentScreen : AppCompatActivity() {
@@ -37,16 +40,26 @@ class ContentScreen : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         supportActionBar?.hide()
         showLoader()
-        setContentData(0)
+        setContentData(1)
 
         var position = 0
         ibNext.setOnClickListener {
             if (position <= 5) {
                 showLoader()
-                position++
+                ++position
                 setContentData(position)
             } else {
                 Toast.makeText(this, "This is last content", Toast.LENGTH_LONG).show()
+                hideLoader()
+            }
+        }
+        ibPrevious.setOnClickListener {
+            if (position > 0) {
+                showLoader()
+                --position
+                setContentData(position)
+            } else {
+                Toast.makeText(this, "This is first content", Toast.LENGTH_LONG).show()
                 hideLoader()
             }
         }
@@ -57,8 +70,23 @@ class ContentScreen : AppCompatActivity() {
     }
 
     private fun setContentData(position: Int) {
+        val demonImageList = listOf(
+            ImageItem(R.drawable.b1),
+            ImageItem(R.drawable.b2),
+            ImageItem(R.drawable.b3),
+            ImageItem(R.drawable.b4),
+            ImageItem(R.drawable.b5)
+        )
+        val jujutsuList = listOf(
+            ImageItem(R.drawable.c1),
+            ImageItem(R.drawable.c2),
+            ImageItem(R.drawable.c3),
+            ImageItem(R.drawable.c4),
+            ImageItem(R.drawable.c5)
+        )
+
         when (position) {
-            0 -> displayContent(
+            1 -> displayContent(
                 ContentData(
                     getString(R.string.title_one_piece),
                     getString(R.string.description_one_piece),
@@ -66,10 +94,25 @@ class ContentScreen : AppCompatActivity() {
                     "S8_YwFLCh4U"
                 )
             )
-            1 -> displayContent(AppConstants.onePiece)
-            2 -> displayContent(AppConstants.onePiece)
-            3 -> displayContent(AppConstants.onePiece)
+            2 -> displayContent(
+                ContentData(
+                    getString(R.string.title_demon_slayer),
+                    getString(R.string.description_demon_slayer),
+                    demonImageList,
+                    "9DhuWapDDrw"
+                )
+            )
+            3 -> displayContent(
+                ContentData(
+                    getString(R.string.title_jujutsu_kaisen),
+                    getString(R.string.description_jujutsu),
+                    jujutsuList,
+                    "fDKmSkMOkIk"
+                )
+            )
             4 -> displayContent(AppConstants.onePiece)
+            5 -> displayContent(AppConstants.onePiece)
+            else -> hideLoader()
         }
 
     }
@@ -79,7 +122,7 @@ class ContentScreen : AppCompatActivity() {
         txtDescription.text = data.description
 
         configureWebView(data.videoId)
-        adapter = ImagePagerAdapter(imageList)
+        adapter = ImagePagerAdapter(data.imageList)
         pager.adapter = adapter
 
         btPlayPause.setOnClickListener {
@@ -133,6 +176,8 @@ class ContentScreen : AppCompatActivity() {
 
     private fun playSound() {
         if (mMediaPlayer == null) {
+            var currentPosition = 0
+            var total = 0
             mMediaPlayer = MediaPlayer.create(this, R.raw.song)
             mMediaPlayer!!.isLooping = false
             mMediaPlayer!!.start()
@@ -143,8 +188,8 @@ class ContentScreen : AppCompatActivity() {
                 timer.scheduleAtFixedRate(object : TimerTask() {
                     override fun run() {
                         runOnUiThread {
-                            val currentPosition = mMediaPlayer!!.currentPosition
-                            val total = mMediaPlayer!!.duration
+                            currentPosition = mMediaPlayer!!.currentPosition
+                            total = mMediaPlayer!!.duration
                             val progressBar = findViewById<ProgressBar>(R.id.progressBar)
                             val progress =
                                 (currentPosition.toFloat() / total.toFloat() * 100).toInt()
@@ -181,10 +226,14 @@ class ContentScreen : AppCompatActivity() {
             })
             Thread {
                 while (true) {
-                    Thread.sleep(100)
+                    Thread.sleep(1000)
                     runOnUiThread {
                         if (mMediaPlayer!!.isPlaying) {
                             seekBar.progress = mMediaPlayer!!.currentPosition
+//                            txtTimer.text =
+//                                "${TimeUnit.MILLISECONDS.toMinutes(mMediaPlayer!!.currentPosition.toLong())}/${
+//                                    TimeUnit.MILLISECONDS.toSeconds(mMediaPlayer!!.currentPosition.toLong())
+//                                }"
                         }
                     }
                 }
