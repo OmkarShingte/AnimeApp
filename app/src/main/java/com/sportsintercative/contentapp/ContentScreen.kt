@@ -3,10 +3,16 @@ package com.sportsintercative.contentapp
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.view.View
+import android.webkit.WebChromeClient
+import android.webkit.WebViewClient
 import android.widget.ProgressBar
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager.widget.ViewPager
+import com.bumptech.glide.Glide
 import com.sportsintercative.contentapp.adapter.ImagePagerAdapter
+import com.sportsintercative.contentapp.constants.AppConstants
+import com.sportsintercative.contentapp.models.ContentData
 import com.sportsintercative.contentapp.models.ImageItem
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
@@ -14,8 +20,6 @@ import java.util.*
 
 class ContentScreen : AppCompatActivity() {
 
-    private lateinit var viewPager: ViewPager
-    private lateinit var viewPagerFull: ViewPager
     private lateinit var adapter: ImagePagerAdapter
     private var mMediaPlayer: MediaPlayer? = null
     private var imageList = listOf(
@@ -30,45 +34,83 @@ class ContentScreen : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         supportActionBar?.hide()
+        showLoader()
+        setContentData(0)
 
-        viewPager = findViewById(R.id.pager)
-        viewPagerFull = findViewById(R.id.pager)
+        var position = 0
+        ibNext.setOnClickListener {
+            if (position <= 5) {
+                showLoader()
+                position++
+                setContentData(position)
+            } else {
+                Toast.makeText(this, "This is last content", Toast.LENGTH_LONG).show()
+                hideLoader()
+            }
+        }
+
+        Glide.with(this)
+            .load(AppConstants.b1)
+            .into(imageView2)
+    }
+
+    private fun setContentData(position: Int) {
+        when (position) {
+            0 -> displayContent(
+                ContentData(
+                    getString(R.string.title_one_piece),
+                    getString(R.string.description_one_piece),
+                    imageList,
+                    "S8_YwFLCh4U"
+                )
+            )
+            1 -> displayContent(AppConstants.onePiece)
+            2 -> displayContent(AppConstants.onePiece)
+            3 -> displayContent(AppConstants.onePiece)
+            4 -> displayContent(AppConstants.onePiece)
+        }
+
+    }
+
+    private fun displayContent(data: ContentData) {
+        txtTitle.text = data.title
+        txtDescription.text = data.description
+
+        configureWebView(data.videoId)
         adapter = ImagePagerAdapter(imageList)
-        viewPager.adapter = adapter
-        viewPagerFull.adapter = adapter
-
+        pager.adapter = adapter
 
         var isPlaying = false
         btPlayPause.setOnClickListener {
             if (isPlaying) {
                 isPlaying = false
                 pauseSound()
-            }
-            else {
+            } else {
                 isPlaying = true
                 playSound()
             }
         }
-        findViewById<View>(R.id.view_back).setOnClickListener {
-            var currentPosition = viewPagerFull.currentItem
+
+        view_back.setOnClickListener {
+            var currentPosition = pager.currentItem
             if (currentPosition == adapter.count - 1) {
                 currentPosition = 0
             } else {
                 currentPosition--
             }
-            viewPagerFull.currentItem = currentPosition
+            pager.currentItem = currentPosition
         }
-        findViewById<View>(R.id.view_back1).setOnClickListener {
-            var currentPosition = viewPagerFull.currentItem
+        view_back1.setOnClickListener {
+            var currentPosition = pager.currentItem
             if (currentPosition == adapter.count - 1) {
                 currentPosition = 0
             } else {
                 currentPosition++
             }
-            viewPagerFull.currentItem = currentPosition
+            pager.currentItem = currentPosition
         }
 
-        viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+        pager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
             override fun onPageScrollStateChanged(state: Int) {}
 
             override fun onPageScrolled(
@@ -81,6 +123,7 @@ class ContentScreen : AppCompatActivity() {
             override fun onPageSelected(position: Int) {
             }
         })
+        hideLoader()
     }
 
     override fun onDestroy() {
@@ -88,7 +131,6 @@ class ContentScreen : AppCompatActivity() {
         stopSound()
     }
 
-    // Play audio
     private fun playSound() {
         if (mMediaPlayer == null) {
             mMediaPlayer = MediaPlayer.create(this, R.raw.song)
@@ -103,11 +145,9 @@ class ContentScreen : AppCompatActivity() {
                         runOnUiThread {
                             val currentPosition = mMediaPlayer!!.currentPosition
                             val total = mMediaPlayer!!.duration
-                            val current = String.format("%02d:%02d", currentPosition / 1000 / 60, currentPosition / 1000 % 60)
-                            val duration = String.format("%02d:%02d", total / 1000 / 60, total / 1000 % 60)
-//                            findViewById<Button>(R.id.button).text = "$current/$duration"
                             val progressBar = findViewById<ProgressBar>(R.id.progressBar)
-                            val progress = (currentPosition.toFloat() / total.toFloat() * 100).toInt()
+                            val progress =
+                                (currentPosition.toFloat() / total.toFloat() * 100).toInt()
                             progressBar.progress = progress
 
                         }
@@ -120,7 +160,6 @@ class ContentScreen : AppCompatActivity() {
         btPlayPause.setImageResource(R.drawable.ic_pause)
     }
 
-    // Pause audio
     private fun pauseSound() {
         if (mMediaPlayer?.isPlaying == true) {
             mMediaPlayer?.pause()
@@ -128,12 +167,38 @@ class ContentScreen : AppCompatActivity() {
         }
     }
 
-    // Stop audio
-    fun stopSound() {
+    private fun stopSound() {
         if (mMediaPlayer != null) {
             mMediaPlayer!!.stop()
             mMediaPlayer!!.release()
             mMediaPlayer = null
         }
+    }
+
+    private fun configureWebView(videoId: String) {
+        webView.webChromeClient = WebChromeClient()
+        webView.webViewClient = WebViewClient()
+        webView.settings.javaScriptEnabled = true
+        webView.settings.domStorageEnabled = true
+        loadVideoWithIFramePlayer(videoId)
+    }
+
+    private fun loadVideoWithIFramePlayer(videoId: String) {
+        val iframeVideoUrl = "https://www.youtube.com/embed/$videoId"
+        webView.loadData(
+            "<html><body><iframe width=\"100%\" height=\"100%\" src=\"$iframeVideoUrl\" frameborder=\"0\" allowfullscreen></iframe></body></html>",
+            "text/html",
+            "utf-8"
+        )
+    }
+
+    private fun showLoader() {
+        loading.visibility = View.VISIBLE
+        conLoader.visibility = View.VISIBLE
+    }
+
+    private fun hideLoader() {
+        loading.visibility = View.GONE
+        conLoader.visibility = View.GONE
     }
 }

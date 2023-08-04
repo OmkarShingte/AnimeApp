@@ -10,6 +10,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
+        supportActionBar?.hide()
 
         Handler().postDelayed(Runnable {
             val intent = Intent(this@MainActivity, ContentScreen::class.java)

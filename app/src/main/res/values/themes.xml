@@ -13,4 +13,9 @@
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
     </style>
+
+<!--    <style name="CustomProgressBar" parent="@android:style/Widget.ProgressBar.Horizontal">-->
+<!--        <item name="android:progressDrawable">@drawable/ic_play</item>-->
+<!--        <item name="android:minHeight">10dp</item>-->
+<!--    </style>-->
 </resources>
