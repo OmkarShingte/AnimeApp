@@ -88,30 +88,34 @@ class ContentScreen : AppCompatActivity() {
         when (position) {
             1 -> displayContent(
                 ContentData(
-                    getString(R.string.title_one_piece),
+                    getString(R.string.title_one_piece) + "1",
                     getString(R.string.description_one_piece),
                     imageList,
                     "S8_YwFLCh4U"
                 )
             )
-            2 -> displayContent(
+            2, 4 -> displayContent(
                 ContentData(
-                    getString(R.string.title_demon_slayer),
+                    getString(R.string.title_demon_slayer) + "2",
                     getString(R.string.description_demon_slayer),
                     demonImageList,
                     "9DhuWapDDrw"
                 )
             )
-            3 -> displayContent(
+            3, 5 -> displayContent(
                 ContentData(
-                    getString(R.string.title_jujutsu_kaisen),
+                    getString(R.string.title_jujutsu_kaisen) + "3",
                     getString(R.string.description_jujutsu),
                     jujutsuList,
                     "fDKmSkMOkIk"
                 )
             )
-            4 -> displayContent(AppConstants.onePiece)
-            5 -> displayContent(AppConstants.onePiece)
+//            4 -> displayContent(AppConstants.onePiece)
+//            5 -> displayContent(AppConstants.onePiece)
+            0 -> {
+                Toast.makeText(this, "This is first content", Toast.LENGTH_LONG).show()
+                hideLoader()
+            }
             else -> hideLoader()
         }
 
