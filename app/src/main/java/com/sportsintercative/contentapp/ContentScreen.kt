@@ -1,30 +1,40 @@
 package com.sportsintercative.contentapp
 
+import android.Manifest
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.le.BluetoothLeScanner
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanResult
+import android.content.pm.PackageManager
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.webkit.WebChromeClient
 import android.webkit.WebViewClient
+import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
 import com.bumptech.glide.Glide
+import com.sportsintercative.contentapp.adapter.DevicesAdapter
 import com.sportsintercative.contentapp.adapter.ImagePagerAdapter
 import com.sportsintercative.contentapp.constants.AppConstants
 import com.sportsintercative.contentapp.models.ContentData
+import com.sportsintercative.contentapp.models.DeviceInfo
 import com.sportsintercative.contentapp.models.ImageItem
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
-import java.util.concurrent.TimeUnit
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 
 
 class ContentScreen : AppCompatActivity() {
 
-    private lateinit var adapter: ImagePagerAdapter
+    private lateinit var imagePagerAdapter: ImagePagerAdapter
     private var mMediaPlayer: MediaPlayer? = null
     private var imageList = listOf(
         ImageItem(R.drawable.a1),
@@ -34,6 +44,7 @@ class ContentScreen : AppCompatActivity() {
         ImageItem(R.drawable.a5)
     )
     private var isPlaying = false
+    var tempAddress = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,6 +78,17 @@ class ContentScreen : AppCompatActivity() {
         Glide.with(this)
             .load(AppConstants.b1)
             .into(imageView2)
+
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.BLUETOOTH_SCAN
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.d("BleDevices", "Permission not granted onCreate")
+            return
+        }
+        Log.d("BleDevices", "Permission granted onCreate")
+        bluetoothLeScanner.startScan(scanCallback)
     }
 
     private fun setContentData(position: Int) {
@@ -126,8 +148,8 @@ class ContentScreen : AppCompatActivity() {
         txtDescription.text = data.description
 
         configureWebView(data.videoId)
-        adapter = ImagePagerAdapter(data.imageList)
-        pager.adapter = adapter
+        imagePagerAdapter = ImagePagerAdapter(data.imageList)
+        pager.adapter = imagePagerAdapter
 
         btPlayPause.setOnClickListener {
             if (isPlaying) {
@@ -140,7 +162,7 @@ class ContentScreen : AppCompatActivity() {
 
         view_back.setOnClickListener {
             var currentPosition = pager.currentItem
-            if (currentPosition == adapter.count - 1) {
+            if (currentPosition == imagePagerAdapter.count - 1) {
                 currentPosition = 0
             } else {
                 currentPosition--
@@ -149,7 +171,7 @@ class ContentScreen : AppCompatActivity() {
         }
         view_back1.setOnClickListener {
             var currentPosition = pager.currentItem
-            if (currentPosition == adapter.count - 1) {
+            if (currentPosition == imagePagerAdapter.count - 1) {
                 currentPosition = 0
             } else {
                 currentPosition++
@@ -176,6 +198,49 @@ class ContentScreen : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         stopSound()
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.BLUETOOTH_SCAN
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    Manifest.permission.BLUETOOTH_SCAN
+                ),
+                100
+            )
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            Log.d("BleDevices", "Permission not granted onDestroy")
+            return
+        }
+        Log.d("BleDevices", "Permission granted onDestroy")
+        bluetoothLeScanner.stopScan(scanCallback)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.BLUETOOTH_SCAN
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            Log.d("BleDevices", "Permission not granted onDestroy")
+            return
+        }
+        bluetoothLeScanner.stopScan(scanCallback)
     }
 
     private fun playSound() {
@@ -288,5 +353,100 @@ class ContentScreen : AppCompatActivity() {
     private fun hideLoader() {
         loading.visibility = View.GONE
         conLoader.visibility = View.GONE
+    }
+
+
+    var dataList = ArrayList<DeviceInfo>() // Your data list
+    val adapter = DevicesAdapter(dataList)
+
+    private val bluetoothLeScanner: BluetoothLeScanner =
+        BluetoothAdapter.getDefaultAdapter().bluetoothLeScanner
+    private val scanCallback = object : ScanCallback() {
+        override fun onScanResult(callbackType: Int, result: ScanResult?) {
+            super.onScanResult(callbackType, result)
+            val deviceAddress = result?.device
+            val deviceName = deviceAddress?.name
+            val deviceDistance = result?.rssi
+            if (ActivityCompat.checkSelfPermission(
+                    this@ContentScreen,
+                    Manifest.permission.BLUETOOTH_CONNECT
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                return
+            }
+
+            if (!deviceName.isNullOrEmpty()) {
+//                if (deviceName!!.contains("QUIN") || deviceName.contains("ColorFit")) {
+                if (dataList.isEmpty())
+                    dataList.add(
+                        DeviceInfo(
+                            deviceDistance.toString(),
+                            deviceName.toString(),
+                            deviceAddress.toString()
+                        )
+                    )
+                else {
+                    if (dataList.none { deviceInfo -> deviceInfo.address == deviceAddress.toString() }) {
+                        dataList.add(
+                            DeviceInfo(
+                                deviceDistance.toString(),
+                                deviceName.toString(),
+                                deviceAddress.toString()
+                            )
+                        )
+                    } else {
+                        dataList.forEach {
+                            if (it.address == deviceAddress.toString()) {
+                                it.distance = deviceDistance.toString()
+                            }
+                        }
+                    }
+                }
+                adapter.notifyDataSetChanged()
+                Log.d(
+                    "BleDevices",
+                    "Name = $deviceName Address = $deviceAddress === $deviceDistance"
+                )
+            }
+//            }
+
+            setData(dataList)
+//            dataList.clear()
+        }
+    }
+
+    private fun setData(dataList: ArrayList<DeviceInfo>) {
+        if (dataList.isNotEmpty()) {
+            var minDistanceLocation: DeviceInfo = dataList[0]
+            for (location in dataList) {
+                if (kotlin.math.abs(location.distance.toInt()) < kotlin.math.abs(minDistanceLocation.distance.toInt()) ||
+                    kotlin.math.abs(location.distance.toInt()) == kotlin.math.abs(
+                        minDistanceLocation.distance.toInt()
+                    )
+                ) {
+                    minDistanceLocation = location
+                    if (tempAddress != minDistanceLocation.address) {
+                        tempAddress = minDistanceLocation.address
+                        setContentData(if (minDistanceLocation.address == "DA:C3:70:63:2B:F2") 1 else 2)
+                        Toast.makeText(this, minDistanceLocation.name, Toast.LENGTH_SHORT).show()
+                    }
+//                    findViewById<Button>(R.id.button).text = minDistanceLocation.name
+                }
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            101 -> {
+                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                }
+            }
+        }
     }
 }
