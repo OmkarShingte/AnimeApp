@@ -7,6 +7,7 @@ import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.content.pm.PackageManager
 import android.media.MediaPlayer
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -16,8 +17,10 @@ import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.SeekBar
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
@@ -46,6 +49,7 @@ class ContentScreen : AppCompatActivity() {
     private var isPlaying = false
     var tempAddress = ""
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -79,16 +83,25 @@ class ContentScreen : AppCompatActivity() {
             .load(AppConstants.b1)
             .into(imageView2)
 
-        if (ActivityCompat.checkSelfPermission(
+        if (checkBluetoothPermission()) {
+            Log.d("BleDevices", "Permission granted onCreate")
+            bluetoothLeScanner.startScan(scanCallback)
+        } else requestPermission()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private fun checkBluetoothPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            (ContextCompat.checkSelfPermission(
+                this, Manifest.permission.BLUETOOTH_SCAN
+            ) == PackageManager.PERMISSION_GRANTED)
+
+        } else {
+            (ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.BLUETOOTH_SCAN
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            Log.d("BleDevices", "Permission not granted onCreate")
-            return
+            ) == PackageManager.PERMISSION_GRANTED)
         }
-        Log.d("BleDevices", "Permission granted onCreate")
-        bluetoothLeScanner.startScan(scanCallback)
     }
 
     private fun setContentData(position: Int) {
@@ -195,52 +208,24 @@ class ContentScreen : AppCompatActivity() {
         hideLoader()
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onDestroy() {
         super.onDestroy()
         stopSound()
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.BLUETOOTH_SCAN
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(
-                    Manifest.permission.BLUETOOTH_SCAN
-                ),
-                100
-            )
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            Log.d("BleDevices", "Permission not granted onDestroy")
-            return
-        }
-        Log.d("BleDevices", "Permission granted onDestroy")
-        bluetoothLeScanner.stopScan(scanCallback)
+        if (checkBluetoothPermission()) {
+            Log.d("BleDevices", "Permission granted onDestroy")
+            bluetoothLeScanner.stopScan(scanCallback)
+        } else
+            requestPermission()
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onPause() {
         super.onPause()
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.BLUETOOTH_SCAN
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            Log.d("BleDevices", "Permission not granted onDestroy")
-            return
-        }
-        bluetoothLeScanner.stopScan(scanCallback)
+        if (checkBluetoothPermission()) {
+            bluetoothLeScanner.stopScan(scanCallback)
+        } else
+            requestPermission()
     }
 
     private fun playSound() {
@@ -409,9 +394,7 @@ class ContentScreen : AppCompatActivity() {
                 )
             }
 //            }
-
             setData(dataList)
-//            dataList.clear()
         }
     }
 
@@ -449,4 +432,31 @@ class ContentScreen : AppCompatActivity() {
             }
         }
     }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun requestPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    Manifest.permission.BLUETOOTH_SCAN,
+                    Manifest.permission.BLUETOOTH,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ),
+                101
+            )
+        } else {
+            ActivityCompat.requestPermissions(
+                this, arrayOf(
+                    Manifest.permission.BLUETOOTH_SCAN,
+                    Manifest.permission.BLUETOOTH,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ),
+                101
+            )
+        }
+    }
+
 }
