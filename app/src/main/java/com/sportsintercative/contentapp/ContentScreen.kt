@@ -13,7 +13,6 @@ import android.util.Log
 import android.view.View
 import android.webkit.WebChromeClient
 import android.webkit.WebViewClient
-import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.SeekBar
 import android.widget.Toast
@@ -21,8 +20,6 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
 import com.bumptech.glide.Glide
 import com.sportsintercative.contentapp.adapter.DevicesAdapter
@@ -33,10 +30,13 @@ import com.sportsintercative.contentapp.models.DeviceInfo
 import com.sportsintercative.contentapp.models.ImageItem
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
+import kotlin.math.abs
+import kotlin.math.pow
 
 
 class ContentScreen : AppCompatActivity() {
 
+    private val REQUEST_ENABLE_BT: Int = 102
     private lateinit var imagePagerAdapter: ImagePagerAdapter
     private var mMediaPlayer: MediaPlayer? = null
     private var imageList = listOf(
@@ -54,15 +54,16 @@ class ContentScreen : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         supportActionBar?.hide()
-        showLoader()
-        setContentData(1)
+//        showLoader()
+//        setContentData(1)
 
+        showNoDeviceFoundScreen(View.VISIBLE)
         var position = 0
         ibNext.setOnClickListener {
             if (position <= 5) {
                 showLoader()
                 ++position
-                setContentData(position)
+//                setContentData(position)
             } else {
                 Toast.makeText(this, "This is last content", Toast.LENGTH_LONG).show()
                 hideLoader()
@@ -72,7 +73,7 @@ class ContentScreen : AppCompatActivity() {
             if (position > 0) {
                 showLoader()
                 --position
-                setContentData(position)
+//                setContentData(position)
             } else {
                 Toast.makeText(this, "This is first content", Toast.LENGTH_LONG).show()
                 hideLoader()
@@ -349,9 +350,6 @@ class ContentScreen : AppCompatActivity() {
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult?) {
             super.onScanResult(callbackType, result)
-            val deviceAddress = result?.device
-            val deviceName = deviceAddress?.name
-            val deviceDistance = result?.rssi
             if (ActivityCompat.checkSelfPermission(
                     this@ContentScreen,
                     Manifest.permission.BLUETOOTH_CONNECT
@@ -359,7 +357,9 @@ class ContentScreen : AppCompatActivity() {
             ) {
                 return
             }
-
+            val deviceAddress = result?.device
+            val deviceName = deviceAddress?.name
+            val deviceDistance = result?.rssi
             if (!deviceName.isNullOrEmpty()) {
 //                if (deviceName!!.contains("QUIN") || deviceName.contains("ColorFit")) {
                 if (dataList.isEmpty())
@@ -388,10 +388,17 @@ class ContentScreen : AppCompatActivity() {
                     }
                 }
                 adapter.notifyDataSetChanged()
+
+                val distance = returnDistance(calculateDistance(abs(deviceDistance!!.toInt())))
                 Log.d(
                     "BleDevices",
-                    "Name = $deviceName Address = $deviceAddress === $deviceDistance"
+                    "Name = $deviceName Address = $deviceAddress === $deviceDistance  ++ $distance"
                 )
+//                ScanResult{device=DA:C3:70:63:2B:F2, scanRecord=ScanRecord [mAdvertiseFlags=5,
+            //                mServiceUuids=[0000180a-0000-1000-8000-00805f9b34fb, 8925d23d-03e4-4447-826c-418dadc7f483],
+            //                mServiceSolicitationUuids=[], mManufacturerSpecificData={}, mServiceData={}, mTxPowerLevel=-2147483648,
+            //                mDeviceName=QUIN PRO+, mTDSData=null], rssi=-80, timestampNanos=399613703737786, eventType=27, primaryPhy=1,
+            //                secondaryPhy=0, advertisingSid=255, txPower=127, periodicAdvertisingInterval=0}
             }
 //            }
             setData(dataList)
@@ -402,21 +409,39 @@ class ContentScreen : AppCompatActivity() {
         if (dataList.isNotEmpty()) {
             var minDistanceLocation: DeviceInfo = dataList[0]
             for (location in dataList) {
-                if (kotlin.math.abs(location.distance.toInt()) < kotlin.math.abs(minDistanceLocation.distance.toInt()) ||
-                    kotlin.math.abs(location.distance.toInt()) == kotlin.math.abs(
-                        minDistanceLocation.distance.toInt()
-                    )
-                ) {
+                if (abs(location.distance.toInt()) <= abs(minDistanceLocation.distance.toInt())) {
                     minDistanceLocation = location
-                    if (tempAddress != minDistanceLocation.address) {
-                        tempAddress = minDistanceLocation.address
-                        setContentData(if (minDistanceLocation.address == "DA:C3:70:63:2B:F2") 1 else 2)
-                        Toast.makeText(this, minDistanceLocation.name, Toast.LENGTH_SHORT).show()
-                    }
-//                    findViewById<Button>(R.id.button).text = minDistanceLocation.name
                 }
             }
+            if (getDistance(minDistanceLocation) < 50) {
+                if (tempAddress != minDistanceLocation.address) {
+                    tempAddress = minDistanceLocation.address
+                    val id = when (minDistanceLocation.address) {
+                        "DA:C3:70:63:2B:F2" -> 1
+                        "D6:32:12:D7:D3:90" -> 2
+                        else -> 10
+                    }
+                    setContentData(id)
+                    Toast.makeText(this, "${minDistanceLocation.name} - ${calculateDistance(getDistance(minDistanceLocation))}", Toast.LENGTH_SHORT).show()
+                }
+                showNoDeviceFoundScreen(View.GONE)
+            } else
+                showNoDeviceFoundScreen(View.VISIBLE)
         }
+    }
+
+    private fun getDistance(minDistanceLocation: DeviceInfo) =
+        abs(minDistanceLocation.distance.toInt())
+
+    fun calculateDistance(rssi: Int): Double {
+        val referenceRssi = -58 // Reference RSSI at a known distance
+        val n = 2.0 // Path loss exponent
+//        return String.format("%.2f", (10.0.pow((referenceRssi - rssi) / (10 * n))))
+        return 10.0.pow((referenceRssi - rssi) / (10 * n))
+    }
+
+    fun returnDistance(calculateDistance: Double): String {
+        return String.format("%.2f", calculateDistance * 1000000)
     }
 
     override fun onRequestPermissionsResult(
@@ -459,4 +484,7 @@ class ContentScreen : AppCompatActivity() {
         }
     }
 
+    private fun showNoDeviceFoundScreen(isVisible: Int) {
+        clNoDeviceFound.visibility = isVisible
+    }
 }
