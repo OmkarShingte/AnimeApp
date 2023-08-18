@@ -1,272 +1,326 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/nestedScrollView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:paddingBottom="30dp">
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/txtNearestDevice"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/clNoDeviceFound"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:background="@color/white"
-            android:elevation="6dp"
-            android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingBottom="30dp">
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/clNoDeviceFound"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@color/white"
+                android:elevation="6dp"
+                android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
-                <TextView
-                    android:id="@+id/textView3"
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:text="No nearby device found"
-                    android:textColor="@color/black"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
+                    android:orientation="vertical"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
 
-<!--                <TextView-->
-<!--                    android:id="@+id/textView4"-->
-<!--                    android:layout_width="match_parent"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_marginTop="14dp"-->
-<!--                    android:gravity="center"-->
-<!--                    android:text="Turn on bluetooth and location to make other devices discoverable." />-->
-            </LinearLayout>
+                    <TextView
+                        android:id="@+id/textView3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="No nearby device found"
+                        android:textColor="@color/black"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+                    <!--                <TextView-->
+                    <!--                    android:id="@+id/textView4"-->
+                    <!--                    android:layout_width="match_parent"-->
+                    <!--                    android:layout_height="wrap_content"-->
+                    <!--                    android:layout_marginTop="14dp"-->
+                    <!--                    android:gravity="center"-->
+                    <!--                    android:text="Turn on bluetooth and location to make other devices discoverable." />-->
+                </LinearLayout>
 
-        <TextView
-            android:id="@+id/txtTitle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginTop="24dp"
-            android:layout_marginEnd="8dp"
-            android:text="@string/title_one_piece"
-            android:textColor="@color/black"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@+id/ibPrevious"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <ImageButton
-            android:id="@+id/ibPrevious"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginEnd="6dp"
-            android:background="@android:color/transparent"
-            android:scaleType="fitCenter"
-            app:layout_constraintBottom_toBottomOf="@+id/ibNext"
-            app:layout_constraintEnd_toStartOf="@+id/ibNext"
-            app:layout_constraintTop_toTopOf="@+id/ibNext"
-            app:srcCompat="@drawable/ic_previous"
-            app:tint="#000000" />
+            <TextView
+                android:id="@+id/txtTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginEnd="8dp"
+                android:text="@string/title_one_piece"
+                android:textColor="@color/black"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toStartOf="@+id/ibPrevious"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-        <ImageButton
-            android:id="@+id/ibNext"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:background="@android:color/transparent"
-            android:scaleType="fitCenter"
-            app:layout_constraintBottom_toBottomOf="@+id/txtTitle"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/txtTitle"
-            app:srcCompat="@drawable/ic_forward" />
+            <ImageButton
+                android:id="@+id/ibPrevious"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="6dp"
+                android:background="@android:color/transparent"
+                android:scaleType="fitCenter"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/ibNext"
+                app:layout_constraintEnd_toStartOf="@+id/ibNext"
+                app:layout_constraintTop_toTopOf="@+id/ibNext"
+                app:srcCompat="@drawable/ic_previous"
+                app:tint="#000000" />
+
+            <ImageButton
+                android:id="@+id/ibNext"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:background="@android:color/transparent"
+                android:scaleType="fitCenter"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/txtTitle"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/txtTitle"
+                app:srcCompat="@drawable/ic_forward" />
 
 
-        <TextView
-            android:id="@+id/txtDescription"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:layout_marginEnd="12dp"
-            android:text="@string/description_one_piece"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="@+id/txtTitle"
-            app:layout_constraintTop_toBottomOf="@+id/txtTitle" />
+            <TextView
+                android:id="@+id/txtDescription"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:layout_marginEnd="12dp"
+                android:text="@string/description_one_piece"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="@+id/txtTitle"
+                app:layout_constraintTop_toBottomOf="@+id/txtTitle" />
 
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardView2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            app:cardCornerRadius="6dp"
-            app:cardElevation="4dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/txtDescription">
-
-            <LinearLayout
-                android:id="@+id/linearLayout"
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardView2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/white">
+                android:layout_margin="10dp"
+                app:cardCornerRadius="6dp"
+                app:cardElevation="4dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/txtDescription">
 
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:id="@+id/constraint_paid_ad"
+                <LinearLayout
+                    android:id="@+id/linearLayout"
                     android:layout_width="match_parent"
-                    android:layout_height="200dp">
+                    android:layout_height="wrap_content"
+                    android:background="@color/white">
 
-                    <androidx.viewpager.widget.ViewPager
-                        android:id="@+id/pager"
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/constraint_paid_ad"
                         android:layout_width="match_parent"
-                        android:layout_height="200dp"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
+                        android:layout_height="200dp">
 
-                    <View
-                        android:id="@+id/view_back"
-                        android:layout_width="50dp"
-                        android:layout_height="50dp"
-                        android:layout_marginStart="8dp"
-                        android:visibility="visible"
-                        app:layout_constraintBottom_toBottomOf="@id/pager"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="@id/pager" />
+                        <androidx.viewpager.widget.ViewPager
+                            android:id="@+id/pager"
+                            android:layout_width="match_parent"
+                            android:layout_height="200dp"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
 
-                    <ImageView
-                        android:id="@+id/img_prev"
-                        android:layout_width="30dp"
-                        android:layout_height="30dp"
-                        android:src="@drawable/ic_previous"
-                        android:visibility="visible"
-                        app:layout_constraintBottom_toBottomOf="@+id/view_back"
-                        app:layout_constraintEnd_toEndOf="@+id/view_back"
-                        app:layout_constraintStart_toStartOf="@+id/view_back"
-                        app:layout_constraintTop_toTopOf="@+id/view_back" />
+                        <View
+                            android:id="@+id/view_back"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:layout_marginStart="8dp"
+                            android:visibility="visible"
+                            app:layout_constraintBottom_toBottomOf="@id/pager"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="@id/pager" />
 
-                    <View
-                        android:id="@+id/view_back1"
-                        android:layout_width="50dp"
-                        android:layout_height="50dp"
-                        android:layout_marginEnd="8dp"
-                        android:visibility="visible"
-                        app:layout_constraintBottom_toBottomOf="@id/pager"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="@id/pager" />
+                        <ImageView
+                            android:id="@+id/img_prev"
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:src="@drawable/ic_previous"
+                            android:visibility="visible"
+                            app:layout_constraintBottom_toBottomOf="@+id/view_back"
+                            app:layout_constraintEnd_toEndOf="@+id/view_back"
+                            app:layout_constraintStart_toStartOf="@+id/view_back"
+                            app:layout_constraintTop_toTopOf="@+id/view_back" />
 
-                    <ImageView
-                        android:id="@+id/img_next"
-                        android:layout_width="30dp"
-                        android:layout_height="30dp"
-                        android:src="@drawable/ic_next_arrow"
-                        android:visibility="visible"
-                        app:layout_constraintBottom_toBottomOf="@+id/view_back1"
-                        app:layout_constraintEnd_toEndOf="@+id/view_back1"
-                        app:layout_constraintStart_toStartOf="@+id/view_back1"
-                        app:layout_constraintTop_toTopOf="@+id/view_back1" />
-                </androidx.constraintlayout.widget.ConstraintLayout>
+                        <View
+                            android:id="@+id/view_back1"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:layout_marginEnd="8dp"
+                            android:visibility="visible"
+                            app:layout_constraintBottom_toBottomOf="@id/pager"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="@id/pager" />
 
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
+                        <ImageView
+                            android:id="@+id/img_next"
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:src="@drawable/ic_next_arrow"
+                            android:visibility="visible"
+                            app:layout_constraintBottom_toBottomOf="@+id/view_back1"
+                            app:layout_constraintEnd_toEndOf="@+id/view_back1"
+                            app:layout_constraintStart_toStartOf="@+id/view_back1"
+                            app:layout_constraintTop_toTopOf="@+id/view_back1" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <ImageButton
-            android:id="@+id/btPlayPause"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="16dp"
-            android:background="@android:color/transparent"
-            android:padding="4dp"
-            android:scaleType="fitCenter"
-            app:layout_constraintBottom_toBottomOf="@+id/seekBar"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/seekBar"
-            app:srcCompat="@drawable/ic_play" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
-        <WebView
-            android:id="@+id/webView"
-            android:layout_width="0dp"
-            android:layout_height="300dp"
-            android:layout_marginTop="24dp"
-            app:layout_constraintEnd_toEndOf="@+id/cardView2"
-            app:layout_constraintStart_toStartOf="@+id/cardView2"
-            app:layout_constraintTop_toBottomOf="@+id/cardView2" />
+            <ImageButton
+                android:id="@+id/btPlayPause"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="16dp"
+                android:background="@android:color/transparent"
+                android:padding="4dp"
+                android:scaleType="fitCenter"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/seekBar"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/seekBar"
+                app:srcCompat="@drawable/ic_play" />
 
-        <SeekBar
-            android:id="@+id/seekBar"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginTop="24dp"
-            android:layout_marginEnd="16dp"
-            android:progressBackgroundTint="#000000"
-            android:progressTint="#000000"
-            android:thumbTint="#FD255F"
-            app:layout_constraintEnd_toStartOf="@+id/txtTimer"
-            app:layout_constraintStart_toEndOf="@+id/btPlayPause"
-            app:layout_constraintTop_toBottomOf="@+id/webView" />
+            <WebView
+                android:id="@+id/webView"
+                android:layout_width="0dp"
+                android:layout_height="300dp"
+                android:layout_marginTop="24dp"
+                app:layout_constraintEnd_toEndOf="@+id/cardView2"
+                app:layout_constraintStart_toStartOf="@+id/cardView2"
+                app:layout_constraintTop_toBottomOf="@+id/cardView2" />
 
-        <ImageView
-            android:id="@+id/imageView2"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="@+id/txtDescription"
-            app:layout_constraintTop_toTopOf="@+id/txtDescription"
-            app:srcCompat="@drawable/a3" />
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/conLoader"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:alpha="0.5"
-            android:background="@color/white"
-            android:elevation="10dp"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <ProgressBar
-                android:id="@+id/loading"
-                android:layout_width="wrap_content"
+            <SeekBar
+                android:id="@+id/seekBar"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:alpha="1"
-                android:progressBackgroundTint="@color/black"
+                android:layout_marginStart="12dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginEnd="16dp"
+                android:progressBackgroundTint="#000000"
+                android:progressTint="#000000"
+                android:thumbTint="#FD255F"
+                android:visibility="gone"
+                app:layout_constraintEnd_toStartOf="@+id/txtTimer"
+                app:layout_constraintStart_toEndOf="@+id/btPlayPause"
+                app:layout_constraintTop_toBottomOf="@+id/webView" />
+
+            <ImageView
+                android:id="@+id/imageView2"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="@+id/txtDescription"
+                app:layout_constraintTop_toTopOf="@+id/txtDescription"
+                app:srcCompat="@drawable/a3" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/conLoader"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:alpha="0.5"
+                android:background="@color/white"
+                android:elevation="10dp"
                 android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent">
+
+                <ProgressBar
+                    android:id="@+id/loading"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:alpha="1"
+                    android:progressBackgroundTint="@color/black"
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <TextView
+                android:id="@+id/txtTimer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:text="0.00/0.00"
+                android:textColor="@color/black"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/seekBar"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/seekBar" />
+
+            <EditText
+                android:id="@+id/edtDistance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30dp"
+                android:ems="10"
+                android:hint="Set Distance"
+                android:inputType="number"
+                app:layout_constraintStart_toStartOf="@+id/webView"
+                app:layout_constraintTop_toBottomOf="@+id/webView" />
+
+            <Button
+                android:id="@+id/btSetDistance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Set Distance"
+                android:textAllCaps="false"
+                app:layout_constraintStart_toStartOf="@+id/edtDistance"
+                app:layout_constraintTop_toBottomOf="@+id/edtDistance" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
 
-        <TextView
-            android:id="@+id/txtTimer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:text="0.00/0.00"
-            android:textColor="@color/black"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@+id/seekBar"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/seekBar" />
+    <TextView
+        android:id="@+id/txtNearestDevice"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="24dp"
+        android:gravity="center"
+        android:maxLines="2"
+        android:singleLine="false"
+        android:text="Nearest Device"
+        android:textColor="@color/black"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</androidx.core.widget.NestedScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

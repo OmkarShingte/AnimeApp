@@ -5,21 +5,27 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.media.MediaPlayer
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebViewClient
+import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.GravityCompat
 import androidx.viewpager.widget.ViewPager
 import com.bumptech.glide.Glide
 import com.sportsintercative.contentapp.adapter.DevicesAdapter
@@ -33,18 +39,19 @@ import java.util.*
 import kotlin.math.abs
 import kotlin.math.pow
 
+// Name = Nordic_2 Address = FD:47:3C:F7:2B:D3 === -47
+//Name = QUIN PRO_1 Address = EF:BD:35:CF:E5:D9 === -66
+
 
 class ContentScreen : AppCompatActivity() {
 
+    private var distance = 50
     private val REQUEST_ENABLE_BT: Int = 102
     private lateinit var imagePagerAdapter: ImagePagerAdapter
     private var mMediaPlayer: MediaPlayer? = null
     private var imageList = listOf(
-        ImageItem(R.drawable.a1),
-        ImageItem(R.drawable.a2),
-        ImageItem(R.drawable.a3),
-        ImageItem(R.drawable.a4),
-        ImageItem(R.drawable.a5)
+        ImageItem(R.drawable.r1),
+        ImageItem(R.drawable.r2)
     )
     private var isPlaying = false
     var tempAddress = ""
@@ -57,13 +64,14 @@ class ContentScreen : AppCompatActivity() {
 //        showLoader()
 //        setContentData(1)
 
+        SharedPref.init(this)
         showNoDeviceFoundScreen(View.VISIBLE)
         var position = 0
         ibNext.setOnClickListener {
             if (position <= 5) {
                 showLoader()
                 ++position
-//                setContentData(position)
+                setContentData(position)
             } else {
                 Toast.makeText(this, "This is last content", Toast.LENGTH_LONG).show()
                 hideLoader()
@@ -73,7 +81,7 @@ class ContentScreen : AppCompatActivity() {
             if (position > 0) {
                 showLoader()
                 --position
-//                setContentData(position)
+                setContentData(position)
             } else {
                 Toast.makeText(this, "This is first content", Toast.LENGTH_LONG).show()
                 hideLoader()
@@ -88,6 +96,11 @@ class ContentScreen : AppCompatActivity() {
             Log.d("BleDevices", "Permission granted onCreate")
             bluetoothLeScanner.startScan(scanCallback)
         } else requestPermission()
+
+        btSetDistance.setOnClickListener {
+            distance = edtDistance.text.toString().toInt()
+            SharedPref.write("Distance", distance.toString())
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -107,49 +120,41 @@ class ContentScreen : AppCompatActivity() {
 
     private fun setContentData(position: Int) {
         val demonImageList = listOf(
-            ImageItem(R.drawable.b1),
-            ImageItem(R.drawable.b2),
-            ImageItem(R.drawable.b3),
-            ImageItem(R.drawable.b4),
-            ImageItem(R.drawable.b5)
+            ImageItem(R.drawable.p1),
+            ImageItem(R.drawable.p2)
         )
-        val jujutsuList = listOf(
-            ImageItem(R.drawable.c1),
-            ImageItem(R.drawable.c2),
-            ImageItem(R.drawable.c3),
-            ImageItem(R.drawable.c4),
-            ImageItem(R.drawable.c5)
+        val tuljapurList = listOf(
+            ImageItem(R.drawable.t1),
+            ImageItem(R.drawable.t2)
         )
 
         when (position) {
             1 -> displayContent(
                 ContentData(
-                    getString(R.string.title_one_piece) + "1",
-                    getString(R.string.description_one_piece),
+                    getString(R.string.title_ramtek),
+                    getString(R.string.description_ramtek),
                     imageList,
-                    "S8_YwFLCh4U"
+                    getString(R.string.youtube_ramtek)
                 )
             )
             2, 4 -> displayContent(
                 ContentData(
-                    getString(R.string.title_demon_slayer) + "2",
-                    getString(R.string.description_demon_slayer),
+                    getString(R.string.title_panchavati),
+                    getString(R.string.description_panchavati),
                     demonImageList,
-                    "9DhuWapDDrw"
+                    getString(R.string.youtube_panchwati)
                 )
             )
             3, 5 -> displayContent(
                 ContentData(
-                    getString(R.string.title_jujutsu_kaisen) + "3",
-                    getString(R.string.description_jujutsu),
-                    jujutsuList,
-                    "fDKmSkMOkIk"
+                    getString(R.string.title_tuljapur),
+                    getString(R.string.description_tuljapur),
+                    tuljapurList,
+                    getString(R.string.youtube_tuljapur)
                 )
             )
-//            4 -> displayContent(AppConstants.onePiece)
-//            5 -> displayContent(AppConstants.onePiece)
             0 -> {
-                Toast.makeText(this, "This is first content", Toast.LENGTH_LONG).show()
+//                Toast.makeText(this, "This is first content", Toast.LENGTH_LONG).show()
                 hideLoader()
             }
             else -> hideLoader()
@@ -389,16 +394,15 @@ class ContentScreen : AppCompatActivity() {
                 }
                 adapter.notifyDataSetChanged()
 
-                val distance = returnDistance(calculateDistance(abs(deviceDistance!!.toInt())))
                 Log.d(
                     "BleDevices",
-                    "Name = $deviceName Address = $deviceAddress === $deviceDistance  ++ $distance"
+                    "Name = $deviceName Address = $deviceAddress === $deviceDistance"
                 )
 //                ScanResult{device=DA:C3:70:63:2B:F2, scanRecord=ScanRecord [mAdvertiseFlags=5,
-            //                mServiceUuids=[0000180a-0000-1000-8000-00805f9b34fb, 8925d23d-03e4-4447-826c-418dadc7f483],
-            //                mServiceSolicitationUuids=[], mManufacturerSpecificData={}, mServiceData={}, mTxPowerLevel=-2147483648,
-            //                mDeviceName=QUIN PRO+, mTDSData=null], rssi=-80, timestampNanos=399613703737786, eventType=27, primaryPhy=1,
-            //                secondaryPhy=0, advertisingSid=255, txPower=127, periodicAdvertisingInterval=0}
+                //                mServiceUuids=[0000180a-0000-1000-8000-00805f9b34fb, 8925d23d-03e4-4447-826c-418dadc7f483],
+                //                mServiceSolicitationUuids=[], mManufacturerSpecificData={}, mServiceData={}, mTxPowerLevel=-2147483648,
+                //                mDeviceName=QUIN PRO+, mTDSData=null], rssi=-80, timestampNanos=399613703737786, eventType=27, primaryPhy=1,
+                //                secondaryPhy=0, advertisingSid=255, txPower=127, periodicAdvertisingInterval=0}
             }
 //            }
             setData(dataList)
@@ -411,22 +415,24 @@ class ContentScreen : AppCompatActivity() {
             for (location in dataList) {
                 if (abs(location.distance.toInt()) <= abs(minDistanceLocation.distance.toInt())) {
                     minDistanceLocation = location
+                    txtNearestDevice.text = "${minDistanceLocation.name} - ${abs(minDistanceLocation.distance.toInt())}"
                 }
             }
-            if (getDistance(minDistanceLocation) < 50) {
+
+            if (getDistance(minDistanceLocation) < distance) {
                 if (tempAddress != minDistanceLocation.address) {
                     tempAddress = minDistanceLocation.address
-                    val id = when (minDistanceLocation.address) {
+                    val id = when (minDistanceLocation.address) {//FD:47:3C:F7:2B:D3
                         "DA:C3:70:63:2B:F2" -> 1
-                        "D6:32:12:D7:D3:90" -> 2
+                        "EF:BD:35:CF:E5:D9" -> 2
+                        "FD:47:3C:F7:2B:D3" -> 3
                         else -> 10
                     }
                     setContentData(id)
-                    Toast.makeText(this, "${minDistanceLocation.name} - ${calculateDistance(getDistance(minDistanceLocation))}", Toast.LENGTH_SHORT).show()
                 }
                 showNoDeviceFoundScreen(View.GONE)
-            } else
-                showNoDeviceFoundScreen(View.VISIBLE)
+            } /*else
+                showNoDeviceFoundScreen(View.VISIBLE)*/
         }
     }
 
@@ -487,4 +493,23 @@ class ContentScreen : AppCompatActivity() {
     private fun showNoDeviceFoundScreen(isVisible: Int) {
         clNoDeviceFound.visibility = isVisible
     }
+
+    private fun showDistanceDialog() {
+        val builder =  AlertDialog.Builder(this)
+        val viewGroup: ViewGroup = findViewById(android.R.id.content)
+        val dialogView: View = LayoutInflater.from(viewGroup.context)
+            .inflate(R.layout.dialog_distance, viewGroup, false)
+        builder?.setView(dialogView)
+        val alertDialog: AlertDialog = builder!!.create()
+        alertDialog.window!!.setBackgroundDrawableResource(android.R.color.transparent);
+        dialogView.findViewById<Button>(R.id.btSubmit)!!.setOnClickListener {
+            distance = edtDistance.text.toString().toInt()
+            alertDialog.dismiss()
+        }
+        dialogView.findViewById<Button>(R.id.btCancel)!!.setOnClickListener {
+            alertDialog.dismiss()
+        }
+        alertDialog.show()
+    }
+
 }
