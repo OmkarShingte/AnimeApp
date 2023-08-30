@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Marg POC</string>
+    <string name="mapbox_access_token">sk.eyJ1Ijoib21rYXItcyIsImEiOiJjbGx2eG9xODkxaXAxM2ZvaHNkdXY5d2lrIn0.32sS_DonA7-kFSVUVluZhw</string>
     <string name="description_one_piece">\t\tOne Piece (stylized in all caps) is a Japanese manga series written and illustrated by Eiichiro Oda. It has been serialized in Shueisha\'s shōnen manga magazine Weekly Shōnen Jump since July 1997, with its individual chapters compiled into 106 tankōbon volumes as of July 2023. T</string>
     <string name="title_one_piece">One Piece (1999)</string>
     <string name="description_jujutsu">Jujutsu Kaisen is a Japanese manga series written and illustrated by Gege Akutami. It has been serialized in Shueisha\'s shōnen manga magazine Weekly Shōnen Jump since March 2018, with its chapters collected and published in 23 tankōbon volumes as of July 2023.</string>

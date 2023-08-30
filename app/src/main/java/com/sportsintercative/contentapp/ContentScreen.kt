@@ -1,21 +1,28 @@
 package com.sportsintercative.contentapp
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.content.Intent
+import android.content.IntentSender.SendIntentException
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.location.Location
+import android.location.LocationRequest
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebViewClient
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -26,6 +33,30 @@ import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager.widget.ViewPager
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.*
+import com.google.android.gms.tasks.OnCompleteListener
+import com.mapbox.geojson.FeatureCollection
+import com.mapbox.geojson.Point
+import com.mapbox.geojson.Polygon
+import com.mapbox.maps.*
+import com.mapbox.maps.extension.style.sources.generated.GeoJsonSource
+import com.mapbox.maps.extension.style.sources.generated.geoJsonSource
+import com.mapbox.maps.extension.style.sources.getSource
+import com.mapbox.maps.extension.style.style
+import com.mapbox.maps.plugin.animation.MapAnimationOptions
+import com.mapbox.maps.plugin.animation.camera
+import com.mapbox.maps.plugin.gestures.*
+import com.mapbox.maps.plugin.locationcomponent.*
+import com.mapbox.navigation.base.options.NavigationOptions
+import com.mapbox.navigation.core.MapboxNavigation
+import com.mapbox.navigation.core.lifecycle.MapboxNavigationApp
+import com.mapbox.navigation.core.lifecycle.MapboxNavigationObserver
+import com.mapbox.navigation.core.lifecycle.requireMapboxNavigation
+import com.mapbox.navigation.core.trip.session.LocationMatcherResult
+import com.mapbox.navigation.core.trip.session.LocationObserver
+import com.mapbox.navigation.ui.maps.location.NavigationLocationProvider
 import com.sportsintercative.contentapp.adapter.DevicesAdapter
 import com.sportsintercative.contentapp.adapter.ImagePagerAdapter
 import com.sportsintercative.contentapp.databinding.ActivityMainBinding
@@ -35,6 +66,7 @@ import com.sportsintercative.contentapp.models.ImageItem
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 import kotlin.math.abs
+
 
 // Name = Nordic_2 Address = FD:47:3C:F7:2B:D3 === -47
 //Name = QUIN PRO_1 Address = EF:BD:35:CF:E5:D9 === -66
@@ -54,6 +86,42 @@ class ContentScreen : AppCompatActivity() {
         ImageItem(R.drawable.r2)
     )
     private var tempAddress = ""
+    private lateinit var mapboxMap: MapboxMap
+    private val navigationLocationProvider = NavigationLocationProvider()
+
+    companion object {
+        private const val BOUNDS_ID = "BOUNDS_ID"
+        private val SAN_FRANCISCO_BOUND: CameraBoundsOptions = CameraBoundsOptions.Builder()
+            .bounds(
+                CoordinateBounds(
+                    Point.fromLngLat(73.78479142959843, 18.54368616252548),
+                    Point.fromLngLat(73.78770581338807, 18.53997565870587),
+                    false
+                )
+            )
+            .minZoom(10.0)
+            .build()
+        private val OFFICE_BOUND: CameraBoundsOptions = CameraBoundsOptions.Builder()
+            .bounds(
+                CoordinateBounds(
+                    Point.fromLngLat(73.78601163456085, 18.54137340267236),
+                    Point.fromLngLat(73.78796500881278, 18.54037285956325),
+                    false
+                )
+            )
+            .minZoom(10.0)
+            .build()
+
+        private val INFINITE_BOUNDS: CameraBoundsOptions = CameraBoundsOptions.Builder()
+            .bounds(
+                CoordinateBounds(
+                    Point.fromLngLat(0.0, 0.0),
+                    Point.fromLngLat(0.0, 0.0),
+                    true
+                )
+            )
+            .build()
+    }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -113,6 +181,123 @@ class ContentScreen : AppCompatActivity() {
         if (bluetoothAdapter == null) {
             Toast.makeText(this, "Device does not supports bluetooth.", Toast.LENGTH_SHORT).show()
             return
+        }
+
+        enableLoc()
+        initiateMapbox()
+    }
+
+    private val mapboxNavigation: MapboxNavigation by requireMapboxNavigation(
+        onResumedObserver = object : MapboxNavigationObserver {
+            @SuppressLint("MissingPermission")
+            override fun onAttached(mapboxNavigation: MapboxNavigation) {
+                mapboxNavigation.registerLocationObserver(locationObserver)
+                mapboxNavigation.startTripSession()
+            }
+
+            override fun onDetached(mapboxNavigation: MapboxNavigation) {
+                mapboxNavigation.unregisterLocationObserver(locationObserver)
+            }
+        },
+        onInitialize = this::initNavigation
+    )
+    private val locationObserver = object : LocationObserver {
+        override fun onNewRawLocation(rawLocation: Location) {
+            // Not implemented in this example. However, if you want you can also
+            // use this callback to get location updates, but as the name suggests
+            // these are raw location updates which are usually noisy.
+        }
+
+        override fun onNewLocationMatcherResult(locationMatcherResult: LocationMatcherResult) {
+            Log.d("locationMatcherResult", "$locationMatcherResult")
+            val enhancedLocation: Location? = locationMatcherResult.enhancedLocation
+            navigationLocationProvider.changePosition(
+                enhancedLocation!!,
+                locationMatcherResult.keyPoints,
+            )
+            updateCamera(enhancedLocation)
+        }
+    }
+
+    private fun initiateMapbox() {
+        binding.mapView.getMapboxMap().loadStyleUri(Style.TRAFFIC_DAY)
+        mapboxMap = binding.mapView!!.getMapboxMap()
+        mapboxMap.loadStyle(
+            style(Style.TRAFFIC_DAY) {
+                +geoJsonSource(BOUNDS_ID) {
+                    featureCollection(FeatureCollection.fromFeatures(listOf()))
+                }
+            }
+        ) { setupBounds(OFFICE_BOUND) }
+        showCrosshair()
+    }
+
+    private fun showBoundsArea(boundsOptions: CameraBoundsOptions) {
+        val source = mapboxMap.getStyle()!!.getSource(BOUNDS_ID) as GeoJsonSource
+        val bounds = boundsOptions.bounds
+        val list = mutableListOf<List<Point>>()
+        bounds?.let {
+            if (!it.infiniteBounds) {
+                val northEast = it.northeast
+                val southWest = it.southwest
+                val northWest = Point.fromLngLat(southWest.longitude(), northEast.latitude())
+                val southEast = Point.fromLngLat(northEast.longitude(), southWest.latitude())
+                list.add(
+                    mutableListOf(northEast, southEast, southWest, northWest, northEast)
+                )
+            }
+        }
+        source.geometry(
+            Polygon.fromLngLats(
+                list
+            )
+        )
+    }
+
+    private fun setupBounds(bounds: CameraBoundsOptions) {
+        mapboxMap.setBounds(bounds)
+        showBoundsArea(bounds)
+    }
+
+    private fun showCrosshair() {
+        val crosshair = View(this)
+        crosshair.layoutParams = FrameLayout.LayoutParams(10, 10, Gravity.CENTER)
+        crosshair.setBackgroundColor(Color.BLUE)
+        binding.mapView.addView(crosshair)
+    }
+
+    private fun updateCamera(location: Location) {
+        val mapAnimationOptions = MapAnimationOptions.Builder().duration(1500L).build()
+        binding.mapView.camera.easeTo(
+            CameraOptions.Builder()
+                // Centers the camera to the lng/lat specified.
+                .center(Point.fromLngLat(location.longitude, location.latitude))
+                // specifies the zoom value. Increase or decrease to zoom in or zoom out
+                .zoom(12.0)
+                // specify frame of reference from the center.
+                .padding(EdgeInsets(0.0, 0.0, 0.0, 0.0))
+                .build(),
+            mapAnimationOptions
+        )
+    }
+
+    private fun initNavigation() {
+        MapboxNavigationApp.setup(
+            NavigationOptions.Builder(this)
+                .accessToken(getString(R.string.mapbox_access_token))
+                .build()
+        )
+        binding.mapView!!.location.apply {
+            setLocationProvider(navigationLocationProvider)
+/*
+            locationPuck = LocationPuck2D(
+                bearingImage = ContextCompat.getDrawable(
+                    this@MainActivity,
+                    R.drawable.mapbox_navigation_puck_icon
+                )
+            )
+*/
+            enabled = true
         }
     }
 
@@ -220,6 +405,7 @@ class ContentScreen : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onDestroy() {
         super.onDestroy()
+        binding.mapView.onDestroy()
         if (checkBluetoothPermission()) {
             Log.d("BleDevices", "Permission granted onDestroy")
             bluetoothLeScanner.stopScan(scanCallback)
@@ -412,5 +598,62 @@ class ContentScreen : AppCompatActivity() {
             alertDialog.dismiss()
         }
         alertDialog.show()
+    }
+
+    private fun enableLoc() {
+        val locationRequest: com.google.android.gms.location.LocationRequest =
+            com.google.android.gms.location.LocationRequest.create()
+        locationRequest.priority = com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
+        locationRequest.interval = 30 * 1000
+        locationRequest.fastestInterval = 5 * 1000
+        val builder: LocationSettingsRequest.Builder = LocationSettingsRequest.Builder()
+            .addLocationRequest(locationRequest)
+        builder.setAlwaysShow(true)
+        val result: com.google.android.gms.tasks.Task<LocationSettingsResponse> =
+            LocationServices.getSettingsClient(this).checkLocationSettings(builder.build())
+        result.addOnCompleteListener {
+            try {
+                val response: LocationSettingsResponse =
+                    it.getResult(ApiException::class.java)
+                // All location settings are satisfied. The client can initialize location
+                // requests here.
+            } catch (exception: ApiException) {
+                when (exception.statusCode) {
+                    LocationSettingsStatusCodes.RESOLUTION_REQUIRED ->                         // Location settings are not satisfied. But could be fixed by showing the
+                        // user a dialog.
+                        try {
+                            // Cast to a resolvable exception.
+                            val resolvable: ResolvableApiException =
+                                exception as ResolvableApiException
+                            // Show the dialog by calling startResolutionForResult(),
+                            // and check the result in onActivityResult().
+                            resolvable.startResolutionForResult(
+                                this@ContentScreen,
+                                100
+                            )
+                        } catch (e: SendIntentException) {
+                            // Ignore the error.
+                        } catch (e: ClassCastException) {
+                            // Ignore, should be an impossible error.
+                        }
+                    LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE -> {}
+                }
+            }
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        binding.mapView.onStart()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        binding.mapView.onStop()
+    }
+
+    override fun onLowMemory() {
+        super.onLowMemory()
+        binding.mapView.onLowMemory()
     }
 }
