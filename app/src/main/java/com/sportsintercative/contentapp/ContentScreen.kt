@@ -17,6 +17,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -45,6 +46,9 @@ class ContentScreen : AppCompatActivity() {
     private var distance = 50
     private val REQUEST_ENABLE_BT: Int = 102
     private lateinit var imagePagerAdapter: ImagePagerAdapter
+    private val isBluetoothEnabled: Boolean
+        get() = bluetoothAdapter?.isEnabled == true
+
     private var imageList = listOf(
         ImageItem(R.drawable.r1),
         ImageItem(R.drawable.r2)
@@ -68,10 +72,37 @@ class ContentScreen : AppCompatActivity() {
         SharedPref.init(this)
         showNoDeviceFoundScreen(View.GONE)
 
-        if (checkBluetoothPermission()) {
-            Log.d("BleDevices", "Permission granted onCreate")
-            bluetoothLeScanner.startScan(scanCallback)
-        } else requestPermission()
+        val enableBluetoothLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) {}
+
+        val permissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { perms ->
+            val canEnableBluetooth = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                perms[Manifest.permission.BLUETOOTH_CONNECT] == true
+            } else true
+            Log.d("canEnableBluetooth", "$canEnableBluetooth")
+
+            if (canEnableBluetooth && !isBluetoothEnabled) {
+                enableBluetoothLauncher.launch(
+                    Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                )
+            } else {
+                if (checkBluetoothPermission()) {
+                    bluetoothLeScanner.startScan(scanCallback)
+                } else requestPermission()
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            permissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.BLUETOOTH_SCAN,
+                    Manifest.permission.BLUETOOTH_CONNECT,
+                )
+            )
+        }
 
         btSetDistance.setOnClickListener {
             distance = edtDistance.text.toString().toInt()
@@ -82,12 +113,6 @@ class ContentScreen : AppCompatActivity() {
         if (bluetoothAdapter == null) {
             Toast.makeText(this, "Device does not supports bluetooth.", Toast.LENGTH_SHORT).show()
             return
-        }
-        if (!bluetoothAdapter.isEnabled) {
-            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            startActivityForResult(enableBtIntent, 101)
-        } else {
-            bluetoothLeScanner.startScan(scanCallback)
         }
     }
 
