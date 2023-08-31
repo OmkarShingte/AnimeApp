@@ -11,7 +11,6 @@ import android.content.IntentSender.SendIntentException
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
-import android.location.LocationRequest
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -36,7 +35,6 @@ import androidx.viewpager.widget.ViewPager
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
-import com.google.android.gms.tasks.OnCompleteListener
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
 import com.mapbox.geojson.Polygon
@@ -47,6 +45,9 @@ import com.mapbox.maps.extension.style.sources.getSource
 import com.mapbox.maps.extension.style.style
 import com.mapbox.maps.plugin.animation.MapAnimationOptions
 import com.mapbox.maps.plugin.animation.camera
+import com.mapbox.maps.plugin.annotation.annotations
+import com.mapbox.maps.plugin.annotation.generated.CircleAnnotationOptions
+import com.mapbox.maps.plugin.annotation.generated.createCircleAnnotationManager
 import com.mapbox.maps.plugin.gestures.*
 import com.mapbox.maps.plugin.locationcomponent.*
 import com.mapbox.navigation.base.options.NavigationOptions
@@ -73,13 +74,13 @@ import kotlin.math.abs
 
 class ContentScreen : AppCompatActivity() {
 
-    lateinit var binding: ActivityMainBinding
+    private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: ContentScreenViewModel
     private var distance = 50
     private val REQUEST_ENABLE_BT: Int = 102
     private lateinit var imagePagerAdapter: ImagePagerAdapter
     private val isBluetoothEnabled: Boolean
-        get() = bluetoothAdapter?.isEnabled == true
+        get() = bluetoothAdapter.isEnabled
 
     private var imageList = listOf(
         ImageItem(R.drawable.r1),
@@ -91,16 +92,6 @@ class ContentScreen : AppCompatActivity() {
 
     companion object {
         private const val BOUNDS_ID = "BOUNDS_ID"
-        private val SAN_FRANCISCO_BOUND: CameraBoundsOptions = CameraBoundsOptions.Builder()
-            .bounds(
-                CoordinateBounds(
-                    Point.fromLngLat(73.78479142959843, 18.54368616252548),
-                    Point.fromLngLat(73.78770581338807, 18.53997565870587),
-                    false
-                )
-            )
-            .minZoom(10.0)
-            .build()
         private val OFFICE_BOUND: CameraBoundsOptions = CameraBoundsOptions.Builder()
             .bounds(
                 CoordinateBounds(
@@ -211,17 +202,19 @@ class ContentScreen : AppCompatActivity() {
         override fun onNewLocationMatcherResult(locationMatcherResult: LocationMatcherResult) {
             Log.d("locationMatcherResult", "$locationMatcherResult")
             val enhancedLocation: Location? = locationMatcherResult.enhancedLocation
-            navigationLocationProvider.changePosition(
-                enhancedLocation!!,
-                locationMatcherResult.keyPoints,
-            )
-            updateCamera(enhancedLocation)
+            if (locationMatcherResult.keyPoints.isEmpty()) {
+                navigationLocationProvider.changePosition(
+                    enhancedLocation!!,
+                    locationMatcherResult.keyPoints,
+                )
+                updateCamera(enhancedLocation)
+            }
         }
     }
 
     private fun initiateMapbox() {
         binding.mapView.getMapboxMap().loadStyleUri(Style.TRAFFIC_DAY)
-        mapboxMap = binding.mapView!!.getMapboxMap()
+        mapboxMap = binding.mapView.getMapboxMap()
         mapboxMap.loadStyle(
             style(Style.TRAFFIC_DAY) {
                 +geoJsonSource(BOUNDS_ID) {
@@ -229,7 +222,7 @@ class ContentScreen : AppCompatActivity() {
                 }
             }
         ) { setupBounds(OFFICE_BOUND) }
-        showCrosshair()
+        setMapviewProperties()
     }
 
     private fun showBoundsArea(boundsOptions: CameraBoundsOptions) {
@@ -257,13 +250,28 @@ class ContentScreen : AppCompatActivity() {
     private fun setupBounds(bounds: CameraBoundsOptions) {
         mapboxMap.setBounds(bounds)
         showBoundsArea(bounds)
+        // Create an instance of the Annotation API and get the CircleAnnotationManager.
+        setPointOnMap(18.540746140968572,73.78681272113883)
+        setPointOnMap(18.54071749019817, 73.7870453813003)
     }
 
-    private fun showCrosshair() {
-        val crosshair = View(this)
-        crosshair.layoutParams = FrameLayout.LayoutParams(10, 10, Gravity.CENTER)
-        crosshair.setBackgroundColor(Color.BLUE)
-        binding.mapView.addView(crosshair)
+    private fun setPointOnMap(latitude: Double, longitude: Double) {
+        val annotationApi = binding.mapView.annotations
+        val circleAnnotationManager = annotationApi.createCircleAnnotationManager()
+        val circleAnnotationOptions: CircleAnnotationOptions = CircleAnnotationOptions()
+            .withPoint(Point.fromLngLat(longitude, latitude))
+            .withCircleRadius(8.0)
+            .withCircleColor("#ee4e8b")
+            .withCircleStrokeWidth(2.0)
+            .withCircleStrokeColor("#ffffff")
+        circleAnnotationManager?.create(circleAnnotationOptions)
+    }
+
+    private fun setMapviewProperties() {
+        val properties = View(this)
+        properties.layoutParams = FrameLayout.LayoutParams(10, 10, Gravity.CENTER)
+        properties.setBackgroundColor(Color.BLUE)
+        binding.mapView.addView(properties)
     }
 
     private fun updateCamera(location: Location) {
@@ -287,7 +295,7 @@ class ContentScreen : AppCompatActivity() {
                 .accessToken(getString(R.string.mapbox_access_token))
                 .build()
         )
-        binding.mapView!!.location.apply {
+        binding.mapView.location.apply {
             setLocationProvider(navigationLocationProvider)
 /*
             locationPuck = LocationPuck2D(
@@ -587,9 +595,9 @@ class ContentScreen : AppCompatActivity() {
         val viewGroup: ViewGroup = findViewById(android.R.id.content)
         val dialogView: View = LayoutInflater.from(viewGroup.context)
             .inflate(R.layout.dialog_distance, viewGroup, false)
-        builder?.setView(dialogView)
-        val alertDialog: AlertDialog = builder!!.create()
-        alertDialog.window!!.setBackgroundDrawableResource(android.R.color.transparent);
+        builder.setView(dialogView)
+        val alertDialog: AlertDialog = builder.create()
+        alertDialog.window!!.setBackgroundDrawableResource(android.R.color.transparent)
         dialogView.findViewById<Button>(R.id.btSubmit)!!.setOnClickListener {
             distance = edtDistance.text.toString().toInt()
             alertDialog.dismiss()
@@ -601,9 +609,9 @@ class ContentScreen : AppCompatActivity() {
     }
 
     private fun enableLoc() {
-        val locationRequest: com.google.android.gms.location.LocationRequest =
-            com.google.android.gms.location.LocationRequest.create()
-        locationRequest.priority = com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
+        val locationRequest: LocationRequest =
+            LocationRequest.create()
+        locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         locationRequest.interval = 30 * 1000
         locationRequest.fastestInterval = 5 * 1000
         val builder: LocationSettingsRequest.Builder = LocationSettingsRequest.Builder()
