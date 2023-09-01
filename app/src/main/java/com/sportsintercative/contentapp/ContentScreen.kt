@@ -113,6 +113,13 @@ class ContentScreen : AppCompatActivity() {
             )
             .build()
     }
+    private val activityResultLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { result ->
+        if (result) {
+            Toast.makeText(this@ContentScreen, "Permission granted!", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -134,6 +141,13 @@ class ContentScreen : AppCompatActivity() {
         val enableBluetoothLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) {}
+        if (ActivityCompat.checkSelfPermission(
+                this@ContentScreen,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            activityResultLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
 
         val permissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
