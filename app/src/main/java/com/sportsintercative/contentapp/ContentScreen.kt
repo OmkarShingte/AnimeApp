@@ -193,7 +193,7 @@ class ContentScreen : AppCompatActivity() {
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(p0: LocationResult) {
                 super.onLocationResult(p0)
-                setPointOnMap(p0.lastLocation!!.latitude,p0.lastLocation!!.longitude)
+                setPointOnMap(p0.lastLocation!!.latitude,p0.lastLocation!!.longitude, true)
             }
         }
         locationRequest = LocationRequest()
@@ -306,17 +306,17 @@ class ContentScreen : AppCompatActivity() {
         mapboxMap.setBounds(bounds)
         showBoundsArea(bounds)
         // Create an instance of the Annotation API and get the CircleAnnotationManager.
-//        setPointOnMap(18.540746140968572, 73.78681272113883)
-//        setPointOnMap(18.54071749019817, 73.7870453813003)
+        setPointOnMap(18.540746140968572, 73.78681272113883, false)
+        setPointOnMap(18.54071749019817, 73.7870453813003, false)
     }
 
-    private fun setPointOnMap(latitude: Double, longitude: Double) {
+    private fun setPointOnMap(latitude: Double, longitude: Double, isLocation: Boolean) {
         val annotationApi = binding.mapView.annotations
         val circleAnnotationManager = annotationApi.createCircleAnnotationManager()
         val circleAnnotationOptions: CircleAnnotationOptions = CircleAnnotationOptions()
             .withPoint(Point.fromLngLat(longitude, latitude))
             .withCircleRadius(8.0)
-            .withCircleColor("#ee4e8b")
+            .withCircleColor(if(!isLocation) "#ee4e8b" else "#346EDA")
             .withCircleStrokeWidth(2.0)
             .withCircleStrokeColor("#ffffff")
         circleAnnotationManager?.create(circleAnnotationOptions)
