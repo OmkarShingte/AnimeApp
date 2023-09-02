@@ -14,6 +14,12 @@
         <!-- Customize your theme here. -->
     </style>
 
+<!--    <style name="CustomLocationComponent" parent="mapbox_LocationComponent">-->
+<!--        <item name="mapbox_locationComponentLocationPuck">"location_puck_2_d"</item>-->
+<!--        <item name="mapbox_locationComponentLocationPuckLocationPuck2DTopImage">@drawable/custom_user_icon</item>-->
+<!--        <item name="mapbox_locationComponentLocationPuckLocationPuck2DBearingImage">@drawable/custom_user_arrow</item>-->
+<!--        <item name="mapbox_locationComponentLocationPuckLocationPuck2DShadowImage">@drawable/custom_user_puck_icon</item>-->
+<!--    </style>-->
 <!--    <style name="CustomProgressBar" parent="@android:style/Widget.ProgressBar.Horizontal">-->
 <!--        <item name="android:progressDrawable">@drawable/ic_play</item>-->
 <!--        <item name="android:minHeight">10dp</item>-->

@@ -1,6 +1,7 @@
 package com.sportsintercative.contentapp
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
@@ -12,7 +13,6 @@ import android.graphics.Color
 import android.location.Location
 import android.os.Build
 import android.os.Bundle
-import android.os.Looper
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -35,7 +35,6 @@ import androidx.viewpager.widget.ViewPager
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
-import com.google.android.gms.tasks.CancellationTokenSource
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
 import com.mapbox.geojson.Polygon
@@ -52,7 +51,12 @@ import com.mapbox.maps.plugin.annotation.generated.createCircleAnnotationManager
 import com.mapbox.maps.plugin.gestures.*
 import com.mapbox.maps.plugin.locationcomponent.*
 import com.mapbox.navigation.base.options.NavigationOptions
+import com.mapbox.navigation.core.MapboxNavigation
 import com.mapbox.navigation.core.lifecycle.MapboxNavigationApp
+import com.mapbox.navigation.core.lifecycle.MapboxNavigationObserver
+import com.mapbox.navigation.core.lifecycle.requireMapboxNavigation
+import com.mapbox.navigation.core.trip.session.LocationMatcherResult
+import com.mapbox.navigation.core.trip.session.LocationObserver
 import com.mapbox.navigation.ui.maps.location.NavigationLocationProvider
 import com.sportsintercative.contentapp.adapter.DevicesAdapter
 import com.sportsintercative.contentapp.adapter.ImagePagerAdapter
@@ -67,10 +71,10 @@ import kotlin.math.abs
 
 // Name = Nordic_2 Address = FD:47:3C:F7:2B:D3 === -47
 //Name = QUIN PRO_1 Address = EF:BD:35:CF:E5:D9 === -66
+val coordinatesStart = Location(18.56967832869374,73.76804772370853 )
+val coordinatesEnd = Location(18.56741876605804, 73.77196007600183)
 
 class ContentScreen : AppCompatActivity() {
-    private var locationRequest: LocationRequest? = null
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: ContentScreenViewModel
@@ -93,10 +97,18 @@ class ContentScreen : AppCompatActivity() {
         private val OFFICE_BOUND: CameraBoundsOptions = CameraBoundsOptions.Builder()
             .bounds(
                 CoordinateBounds(
-//                    Point.fromLngLat(73.78522371320247, 18.544814061871477),
-//                    Point.fromLngLat(73.7925412410158, 18.534980595873474),
                     Point.fromLngLat(73.78601163456085, 18.54137340267236),
                     Point.fromLngLat(73.78796500881278, 18.54037285956325),
+                    false
+                )
+            )
+            .minZoom(10.0)
+            .build()
+        private val PG_BOUND: CameraBoundsOptions = CameraBoundsOptions.Builder()
+            .bounds(
+                CoordinateBounds(
+                    Point.fromLngLat(coordinatesStart.longitude, coordinatesStart.latitude),
+                    Point.fromLngLat(coordinatesEnd.longitude, coordinatesEnd.latitude),
                     false
                 )
             )
@@ -190,55 +202,54 @@ class ContentScreen : AppCompatActivity() {
 
         enableLoc()
         initiateMapbox()
-        locationCallback = object : LocationCallback() {
-            override fun onLocationResult(p0: LocationResult) {
-                super.onLocationResult(p0)
-                setPointOnMap(p0.lastLocation!!.latitude,p0.lastLocation!!.longitude, true)
-            }
-        }
-        locationRequest = LocationRequest()
-        locationRequest!!.interval = 10
-        locationRequest!!.fastestInterval = 10
-        locationRequest!!.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
-
     }
 
-//    private val mapboxNavigation: MapboxNavigation by requireMapboxNavigation(
-//        onResumedObserver = object : MapboxNavigationObserver {
-//            @SuppressLint("MissingPermission")
-//            override fun onAttached(mapboxNavigation: MapboxNavigation) {
-//                mapboxNavigation.registerLocationObserver(locationObserver)
-//                mapboxNavigation.startTripSession()
-//            }
-//
-//            override fun onDetached(mapboxNavigation: MapboxNavigation) {
-//                mapboxNavigation.unregisterLocationObserver(locationObserver)
-//            }
-//        },
-//        onInitialize = this::initNavigation
-//    )
-//    private val locationObserver = object : LocationObserver {
-//        override fun onNewRawLocation(rawLocation: Location) {
-//            // Not implemented in this example. However, if you want you can also
-//            // use this callback to get location updates, but as the name suggests
-//            // these are raw location updates which are usually noisy.
-//        }
-//
-//        override fun onNewLocationMatcherResult(locationMatcherResult: LocationMatcherResult) {
-//            Log.d("locationMatcherResult", "$locationMatcherResult")
-//            val enhancedLocation: Location? = locationMatcherResult.enhancedLocation
-//            if (locationMatcherResult.keyPoints.isEmpty()) {
-//                navigationLocationProvider.changePosition(
-//                    enhancedLocation!!,
-//                    locationMatcherResult.keyPoints,
-//                )
-//                updateCamera(enhancedLocation)
-//            }
-//        }
-//    }
+    private val mapboxNavigation: MapboxNavigation by requireMapboxNavigation(
+        onResumedObserver = object : MapboxNavigationObserver {
+            @SuppressLint("MissingPermission")
+            override fun onAttached(mapboxNavigation: MapboxNavigation) {
+                mapboxNavigation.registerLocationObserver(locationObserver)
+                mapboxNavigation.startTripSession()
+            }
+
+            override fun onDetached(mapboxNavigation: MapboxNavigation) {
+                mapboxNavigation.unregisterLocationObserver(locationObserver)
+            }
+        },
+        onInitialize = this::initNavigation
+    )
+    private val locationObserver = object : LocationObserver {
+        override fun onNewRawLocation(rawLocation: Location) {
+            // Not implemented in this example. However, if you want you can also
+            // use this callback to get location updates, but as the name suggests
+            // these are raw location updates which are usually noisy.
+        }
+
+        override fun onNewLocationMatcherResult(locationMatcherResult: LocationMatcherResult) {
+            Log.d("locationMatcherResult", "$locationMatcherResult")
+            val enhancedLocation: Location? = locationMatcherResult.enhancedLocation
+            if (locationMatcherResult.keyPoints.isEmpty()) {
+                navigationLocationProvider.changePosition(
+                    enhancedLocation!!,
+                    locationMatcherResult.keyPoints,
+                )
+                updateCamera(enhancedLocation)
+            }
+        }
+    }
 
     private fun initiateMapbox() {
-        binding.mapView.getMapboxMap().loadStyleUri(Style.TRAFFIC_DAY)
+        binding.mapView.getMapboxMap().loadStyleUri(
+            Style.MAPBOX_STREETS
+        )
+        // After the style is loaded, initialize the Location component.
+        {
+            mapView.location.updateSettings {
+                enabled = true
+                pulsingEnabled = true
+            }
+        }
+//        binding.mapView.getMapboxMap().loadStyleUri(Style.TRAFFIC_DAY)
         mapboxMap = binding.mapView.getMapboxMap()
         mapboxMap.loadStyle(
             style(Style.TRAFFIC_DAY) {
@@ -246,38 +257,8 @@ class ContentScreen : AppCompatActivity() {
                     featureCollection(FeatureCollection.fromFeatures(listOf()))
                 }
             }
-        ) { setupBounds(OFFICE_BOUND) }
+        ) { setupBounds(PG_BOUND) }
         setMapviewProperties()
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            return
-        }
-//        fusedLocationClient.lastLocation
-//            .addOnSuccessListener { location: Location? ->
-//                Log.d("location111","$location")
-//                setPointOnMap(latitude = location!!.latitude, longitude = location!!.longitude)
-//
-//                updateCamera(location!!)
-//                // Got last known location. In some rare situations this can be null.
-//            }
-        val cts = CancellationTokenSource()
-//        val task: Task<Int> = doSomething(cts.token)
-//        cts.cancel()
-//        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cts.token)
-//            .addOnSuccessListener { location: Location? ->
-//                Log.d("location1110000", "$location")
-//                setPointOnMap(latitude = location!!.latitude, longitude = location!!.longitude)
-//
-//                updateCamera(location!!)
-//                // Got last known location. In some rare situations this can be null.
-//            }
     }
 
     private fun showBoundsArea(boundsOptions: CameraBoundsOptions) {
@@ -306,17 +287,17 @@ class ContentScreen : AppCompatActivity() {
         mapboxMap.setBounds(bounds)
         showBoundsArea(bounds)
         // Create an instance of the Annotation API and get the CircleAnnotationManager.
-        setPointOnMap(18.540746140968572, 73.78681272113883, false)
-        setPointOnMap(18.54071749019817, 73.7870453813003, false)
+        setPointOnMap(18.540746140968572,73.78681272113883)
+        setPointOnMap(18.54071749019817, 73.7870453813003)
     }
 
-    private fun setPointOnMap(latitude: Double, longitude: Double, isLocation: Boolean) {
+    private fun setPointOnMap(latitude: Double, longitude: Double) {
         val annotationApi = binding.mapView.annotations
         val circleAnnotationManager = annotationApi.createCircleAnnotationManager()
         val circleAnnotationOptions: CircleAnnotationOptions = CircleAnnotationOptions()
             .withPoint(Point.fromLngLat(longitude, latitude))
             .withCircleRadius(8.0)
-            .withCircleColor(if(!isLocation) "#ee4e8b" else "#346EDA")
+            .withCircleColor("#ee4e8b")
             .withCircleStrokeWidth(2.0)
             .withCircleStrokeColor("#ffffff")
         circleAnnotationManager?.create(circleAnnotationOptions)
@@ -719,26 +700,5 @@ class ContentScreen : AppCompatActivity() {
         super.onLowMemory()
         binding.mapView.onLowMemory()
     }
-
-    override fun onResume() {
-        super.onResume()
-        startLocationUpdates()
-
-    }
-    private lateinit var locationCallback: LocationCallback
-    private fun startLocationUpdates() {
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            return
-        }
-        fusedLocationClient.requestLocationUpdates(locationRequest!!,
-            locationCallback,
-            Looper.getMainLooper())
-    }
 }
+data class Location(val latitude: Double, val longitude: Double)
