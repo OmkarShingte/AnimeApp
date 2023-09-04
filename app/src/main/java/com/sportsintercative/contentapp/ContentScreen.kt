@@ -71,7 +71,7 @@ import kotlin.math.abs
 
 // Name = Nordic_2 Address = FD:47:3C:F7:2B:D3 === -47
 //Name = QUIN PRO_1 Address = EF:BD:35:CF:E5:D9 === -66
-val coordinatesStart = Location(18.56967832869374,73.76804772370853 )
+val coordinatesStart = Location(18.56967832869374, 73.76804772370853)
 val coordinatesEnd = Location(18.56741876605804, 73.77196007600183)
 
 class ContentScreen : AppCompatActivity() {
@@ -228,36 +228,34 @@ class ContentScreen : AppCompatActivity() {
         override fun onNewLocationMatcherResult(locationMatcherResult: LocationMatcherResult) {
             Log.d("locationMatcherResult", "$locationMatcherResult")
             val enhancedLocation: Location? = locationMatcherResult.enhancedLocation
-            if (locationMatcherResult.keyPoints.isEmpty()) {
+//            if (locationMatcherResult.keyPoints.isEmpty()) {
                 navigationLocationProvider.changePosition(
                     enhancedLocation!!,
                     locationMatcherResult.keyPoints,
                 )
                 updateCamera(enhancedLocation)
-            }
+//            }
         }
     }
 
     private fun initiateMapbox() {
-        binding.mapView.getMapboxMap().loadStyleUri(
+        mapboxMap = binding.mapView.getMapboxMap()
+        mapboxMap.loadStyleUri(
             Style.MAPBOX_STREETS
         )
-        // After the style is loaded, initialize the Location component.
         {
             mapView.location.updateSettings {
                 enabled = true
                 pulsingEnabled = true
             }
         }
-//        binding.mapView.getMapboxMap().loadStyleUri(Style.TRAFFIC_DAY)
-        mapboxMap = binding.mapView.getMapboxMap()
         mapboxMap.loadStyle(
             style(Style.TRAFFIC_DAY) {
                 +geoJsonSource(BOUNDS_ID) {
                     featureCollection(FeatureCollection.fromFeatures(listOf()))
                 }
             }
-        ) { setupBounds(PG_BOUND) }
+        ) { setupBounds(OFFICE_BOUND) }
         setMapviewProperties()
     }
 
@@ -287,7 +285,7 @@ class ContentScreen : AppCompatActivity() {
         mapboxMap.setBounds(bounds)
         showBoundsArea(bounds)
         // Create an instance of the Annotation API and get the CircleAnnotationManager.
-        setPointOnMap(18.540746140968572,73.78681272113883)
+        setPointOnMap(18.540746140968572, 73.78681272113883)
         setPointOnMap(18.54071749019817, 73.7870453813003)
     }
 
@@ -314,11 +312,8 @@ class ContentScreen : AppCompatActivity() {
         val mapAnimationOptions = MapAnimationOptions.Builder().duration(1500L).build()
         binding.mapView.camera.easeTo(
             CameraOptions.Builder()
-                // Centers the camera to the lng/lat specified.
                 .center(Point.fromLngLat(location.longitude, location.latitude))
-                // specifies the zoom value. Increase or decrease to zoom in or zoom out
                 .zoom(12.0)
-                // specify frame of reference from the center.
                 .padding(EdgeInsets(0.0, 0.0, 0.0, 0.0))
                 .build(),
             mapAnimationOptions
@@ -699,6 +694,11 @@ class ContentScreen : AppCompatActivity() {
     override fun onLowMemory() {
         super.onLowMemory()
         binding.mapView.onLowMemory()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        binding.mapView.onStart()
     }
 }
 data class Location(val latitude: Double, val longitude: Double)
