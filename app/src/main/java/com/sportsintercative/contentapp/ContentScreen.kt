@@ -136,6 +136,7 @@ class ContentScreen : AppCompatActivity() {
             )
             .build()
     }
+
     private val activityResultLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { result ->
@@ -164,13 +165,6 @@ class ContentScreen : AppCompatActivity() {
         val enableBluetoothLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) {}
-        if (ActivityCompat.checkSelfPermission(
-                this@ContentScreen,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            activityResultLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-        }
 
         val permissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
@@ -188,6 +182,13 @@ class ContentScreen : AppCompatActivity() {
                 if (checkBluetoothPermission()) {
                     bluetoothLeScanner.startScan(scanCallback)
                 } else requestPermission()
+            }
+            if (ActivityCompat.checkSelfPermission(
+                    this@ContentScreen,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                activityResultLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             }
         }
 
@@ -231,15 +232,12 @@ class ContentScreen : AppCompatActivity() {
     )
     private val locationObserver = object : LocationObserver {
         override fun onNewRawLocation(rawLocation: Location) {
-            // Not implemented in this example. However, if you want you can also
-            // use this callback to get location updates, but as the name suggests
-            // these are raw location updates which are usually noisy.
         }
 
         override fun onNewLocationMatcherResult(locationMatcherResult: LocationMatcherResult) {
             Log.d("locationMatcherResult", "$locationMatcherResult")
             val enhancedLocation: Location? = locationMatcherResult.enhancedLocation
-//            if (locationMatcherResult.keyPoints.isEmpty()) {
+
             txtAccuracy.text =
                 "${locationMatcherResult.enhancedLocation.accuracy}, ${locationMatcherResult.keyPoints.size}"
             if (locationMatcherResult.enhancedLocation.accuracy < 15.0 || locationMatcherResult.keyPoints.isEmpty()) {
@@ -247,9 +245,7 @@ class ContentScreen : AppCompatActivity() {
                     enhancedLocation!!,
                     locationMatcherResult.keyPoints,
                 )
-//                ibLocation.setOnClickListener {
-                    updateCamera(enhancedLocation)
-//                }
+                updateCamera(enhancedLocation)
             }
         }
     }
@@ -543,7 +539,6 @@ class ContentScreen : AppCompatActivity() {
             val deviceName = deviceAddress?.name
             val deviceDistance = result?.rssi
             if (!deviceName.isNullOrEmpty()) {
-//                if (deviceName!!.contains("QUIN") || deviceName.contains("ColorFit")) {
                 if (dataList.isEmpty())
                     dataList.add(
                         DeviceInfo(
@@ -576,7 +571,6 @@ class ContentScreen : AppCompatActivity() {
                     "Name = $deviceName Address = $deviceAddress === $deviceDistance"
                 )
             }
-//            }
             setData(dataList)
         }
     }
@@ -687,28 +681,19 @@ class ContentScreen : AppCompatActivity() {
             LocationServices.getSettingsClient(this).checkLocationSettings(builder.build())
         result.addOnCompleteListener {
             try {
-                val response: LocationSettingsResponse =
-                    it.getResult(ApiException::class.java)
-                // All location settings are satisfied. The client can initialize location
-                // requests here.
+                it.getResult(ApiException::class.java)
             } catch (exception: ApiException) {
                 when (exception.statusCode) {
-                    LocationSettingsStatusCodes.RESOLUTION_REQUIRED ->                         // Location settings are not satisfied. But could be fixed by showing the
-                        // user a dialog.
+                    LocationSettingsStatusCodes.RESOLUTION_REQUIRED ->
                         try {
-                            // Cast to a resolvable exception.
                             val resolvable: ResolvableApiException =
                                 exception as ResolvableApiException
-                            // Show the dialog by calling startResolutionForResult(),
-                            // and check the result in onActivityResult().
                             resolvable.startResolutionForResult(
                                 this@ContentScreen,
                                 100
                             )
                         } catch (e: SendIntentException) {
-                            // Ignore the error.
                         } catch (e: ClassCastException) {
-                            // Ignore, should be an impossible error.
                         }
                     LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE -> {}
                 }
@@ -736,4 +721,5 @@ class ContentScreen : AppCompatActivity() {
         binding.mapView.onStart()
     }
 }
+
 data class Location(val latitude: Double, val longitude: Double)
