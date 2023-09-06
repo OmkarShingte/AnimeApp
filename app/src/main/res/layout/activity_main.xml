@@ -58,34 +58,6 @@
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <TextView
-                    android:id="@+id/txtTitle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_marginTop="24dp"
-                    android:layout_marginEnd="8dp"
-                    android:text="@string/title_one_piece"
-                    android:textColor="@color/black"
-                    android:textSize="24sp"
-                    android:textStyle="bold"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <TextView
-                    android:id="@+id/txtDescription"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:layout_marginEnd="12dp"
-                    android:text="@string/description_one_piece"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintStart_toStartOf="@+id/txtTitle"
-                    app:layout_constraintTop_toBottomOf="@+id/txtTitle" />
-
                 <com.mapbox.maps.MapView
                     android:id="@+id/mapView"
                     android:layout_width="match_parent"
@@ -93,10 +65,81 @@
                     android:layout_margin="10dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/txtDescription"
+                    app:layout_constraintTop_toTopOf="parent"
                     mapbox:mapbox_cameraTargetLat="18.540781633788814"
                     mapbox:mapbox_cameraTargetLng="73.78726384263959"
-                    mapbox:mapbox_cameraZoom="9.0" />
+                    mapbox:mapbox_cameraZoom="9.0">
+
+                    <ImageButton
+                        android:id="@+id/ibLocation"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom|right"
+                        android:layout_margin="4dp"
+                        android:background="@android:color/transparent"
+                        android:visibility="gone"
+                        mapbox:srcCompat="@drawable/baseline_my_location" />
+
+                    <TextView
+                        android:id="@+id/txtAccuracy"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom|right"
+                        android:layout_margin="4dp"
+                        android:text="Accuracy"
+                        android:textColor="@color/black" />
+                </com.mapbox.maps.MapView>
+
+                <ImageButton
+                    android:id="@+id/ibZoomIn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginEnd="4dp"
+                    android:background="@android:color/transparent"
+                    android:visibility="gone"
+                    app:layout_constraintEnd_toEndOf="@+id/mapView"
+                    app:layout_constraintTop_toTopOf="@+id/mapView"
+                    mapbox:srcCompat="@drawable/ic_add" />
+
+                <ImageButton
+                    android:id="@+id/ibZoomOut"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginEnd="4dp"
+                    android:background="@android:color/transparent"
+                    android:visibility="gone"
+                    app:layout_constraintTop_toBottomOf="@+id/ibZoomIn"
+                    mapbox:layout_constraintEnd_toEndOf="@+id/mapView"
+                    mapbox:srcCompat="@drawable/ic_add" />
+
+                <TextView
+                    android:id="@+id/txtTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_panchavati"
+                    android:textColor="@color/black"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/mapView" />
+
+                <TextView
+                    android:id="@+id/txtDescription"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="12dp"
+                    android:text="@string/description_panchavati"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintStart_toStartOf="@+id/txtTitle"
+                    app:layout_constraintTop_toBottomOf="@+id/txtTitle" />
 
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cardView2"
@@ -107,7 +150,7 @@
                     app:cardElevation="4dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/mapView">
+                    app:layout_constraintTop_toBottomOf="@+id/txtDescription">
 
                     <LinearLayout
                         android:id="@+id/linearLayout"
@@ -219,6 +262,7 @@
                     android:ems="10"
                     android:hint="Set Distance"
                     android:inputType="number"
+                    app:layout_constraintEnd_toStartOf="@+id/btSetDistance"
                     app:layout_constraintStart_toStartOf="@+id/webView"
                     app:layout_constraintTop_toBottomOf="@+id/webView" />
 
@@ -226,10 +270,13 @@
                     android:id="@+id/btSetDistance"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginEnd="12dp"
                     android:text="Set Distance"
                     android:textAllCaps="false"
-                    app:layout_constraintStart_toStartOf="@+id/edtDistance"
-                    app:layout_constraintTop_toBottomOf="@+id/edtDistance" />
+                    app:layout_constraintBottom_toBottomOf="@+id/edtDistance"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/edtDistance"
+                    app:layout_constraintTop_toTopOf="@+id/edtDistance" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.core.widget.NestedScrollView>

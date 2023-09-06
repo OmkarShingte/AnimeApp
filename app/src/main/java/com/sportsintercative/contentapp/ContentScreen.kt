@@ -91,6 +91,7 @@ class ContentScreen : AppCompatActivity() {
     private var tempAddress = ""
     private lateinit var mapboxMap: MapboxMap
     private val navigationLocationProvider = NavigationLocationProvider()
+    var zoomValue = 0.0
 
     companion object {
         private const val BOUNDS_ID = "BOUNDS_ID"
@@ -109,6 +110,16 @@ class ContentScreen : AppCompatActivity() {
                 CoordinateBounds(
                     Point.fromLngLat(coordinatesStart.longitude, coordinatesStart.latitude),
                     Point.fromLngLat(coordinatesEnd.longitude, coordinatesEnd.latitude),
+                    false
+                )
+            )
+            .minZoom(10.0)
+            .build()
+        private val SIDDHESH_BOUND: CameraBoundsOptions = CameraBoundsOptions.Builder()
+            .bounds(
+                CoordinateBounds(
+                    Point.fromLngLat(73.75656061363571, 18.57384603923934),
+                    Point.fromLngLat(73.80053505098763, 18.533795236755413),
                     false
                 )
             )
@@ -229,12 +240,17 @@ class ContentScreen : AppCompatActivity() {
             Log.d("locationMatcherResult", "$locationMatcherResult")
             val enhancedLocation: Location? = locationMatcherResult.enhancedLocation
 //            if (locationMatcherResult.keyPoints.isEmpty()) {
+            txtAccuracy.text =
+                "${locationMatcherResult.enhancedLocation.accuracy}, ${locationMatcherResult.keyPoints.size}"
+            if (locationMatcherResult.enhancedLocation.accuracy < 15.0 || locationMatcherResult.keyPoints.isEmpty()) {
                 navigationLocationProvider.changePosition(
                     enhancedLocation!!,
                     locationMatcherResult.keyPoints,
                 )
-                updateCamera(enhancedLocation)
-//            }
+//                ibLocation.setOnClickListener {
+                    updateCamera(enhancedLocation)
+//                }
+            }
         }
     }
 
@@ -255,8 +271,27 @@ class ContentScreen : AppCompatActivity() {
                     featureCollection(FeatureCollection.fromFeatures(listOf()))
                 }
             }
-        ) { setupBounds(OFFICE_BOUND) }
+        ) { setupBounds(SIDDHESH_BOUND) }
+        zoomValue = 10.0
         setMapviewProperties()
+        ibZoomIn.setOnClickListener {
+            val mapAnimationOptions = MapAnimationOptions.Builder().duration(1500L).build()
+            binding.mapView.camera.easeTo(
+                CameraOptions.Builder()
+                    .zoom(zoomValue + 1.0)
+                    .build(),
+                mapAnimationOptions
+            )
+        }
+        ibZoomOut.setOnClickListener {
+            val mapAnimationOptions = MapAnimationOptions.Builder().duration(1500L).build()
+            binding.mapView.camera.easeTo(
+                CameraOptions.Builder()
+                    .zoom(zoomValue - 1.0)
+                    .build(),
+                mapAnimationOptions
+            )
+        }
     }
 
     private fun showBoundsArea(boundsOptions: CameraBoundsOptions) {
@@ -313,7 +348,7 @@ class ContentScreen : AppCompatActivity() {
         binding.mapView.camera.easeTo(
             CameraOptions.Builder()
                 .center(Point.fromLngLat(location.longitude, location.latitude))
-                .zoom(12.0)
+                .zoom(17.0)
                 .padding(EdgeInsets(0.0, 0.0, 0.0, 0.0))
                 .build(),
             mapAnimationOptions

@@ -1,12 +1,6 @@
 <resources>
     <string name="app_name">Marg POC</string>
     <string name="mapbox_access_token">sk.eyJ1Ijoib21rYXItcyIsImEiOiJjbGx2eG9xODkxaXAxM2ZvaHNkdXY5d2lrIn0.32sS_DonA7-kFSVUVluZhw</string>
-    <string name="description_one_piece">\t\tOne Piece (stylized in all caps) is a Japanese manga series written and illustrated by Eiichiro Oda. It has been serialized in Shueisha\'s shōnen manga magazine Weekly Shōnen Jump since July 1997, with its individual chapters compiled into 106 tankōbon volumes as of July 2023. T</string>
-    <string name="title_one_piece">One Piece (1999)</string>
-    <string name="description_jujutsu">Jujutsu Kaisen is a Japanese manga series written and illustrated by Gege Akutami. It has been serialized in Shueisha\'s shōnen manga magazine Weekly Shōnen Jump since March 2018, with its chapters collected and published in 23 tankōbon volumes as of July 2023.</string>
-    <string name="title_demon_slayer">Demon Slayer</string>
-    <string name="description_demon_slayer">Demon Slayer: Kimetsu no Yaiba is a Japanese manga series written and illustrated by Koyoharu Gotouge. It was serialized in Shueisha\'s shōnen manga magazine Weekly Shōnen Jump from February 2016 to May 2020, with its chapters collected in 23 tankōbon volumes.</string>
-    <string name="title_jujutsu_kaisen">Jujutsu Kaisen</string>
     <string name="title_ramtek">Ramtek</string>
     <string name="description_ramtek">Ramtek hosts a historic temple of Rama. It is believed that Ramtek was the place where Rama, the Hindu god, rested while he was in exile, Hence it is named Ramtek. According to Hindu mythology, the ashram of the Hindu sage Agastya was situated close to Ramtek.</string>
     <string name="youtube_ramtek">8m8hnIWukuA</string>
